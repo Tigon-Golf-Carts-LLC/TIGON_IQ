@@ -1,0 +1,186 @@
+import { sql } from "drizzle-orm";
+import { pgTable, text, varchar, uuid, timestamp, jsonb, boolean, integer } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  role: text("role").notNull().default("representative"), // admin, representative
+  status: text("status").notNull().default("offline"), // online, offline, busy
+  profileImageUrl: text("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const websites = pgTable("websites", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  domain: text("domain").notNull(),
+  name: text("name").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  allowedPages: jsonb("allowed_pages").default([]), // array of URL patterns
+  blockedPages: jsonb("blocked_pages").default([]), // array of URL patterns
+  whitelistMode: boolean("whitelist_mode").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const conversations = pgTable("conversations", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  websiteId: uuid("website_id").references(() => websites.id),
+  customerEmail: text("customer_email"),
+  customerName: text("customer_name"),
+  status: text("status").notNull().default("active"), // active, closed, waiting
+  assignedRepresentativeId: uuid("assigned_representative_id").references(() => users.id),
+  isAiAssisted: boolean("is_ai_assisted").notNull().default(true),
+  metadata: jsonb("metadata").default({}), // customer info, browser, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const messages = pgTable("messages", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  conversationId: uuid("conversation_id").notNull().references(() => conversations.id),
+  senderType: text("sender_type").notNull(), // customer, representative, ai
+  senderId: uuid("sender_id").references(() => users.id), // null for customer/ai
+  content: text("content").notNull(),
+  messageType: text("message_type").notNull().default("text"), // text, file, voice, image
+  fileUrl: text("file_url"),
+  metadata: jsonb("metadata").default({}), // file info, voice duration, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const settings = pgTable("settings", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  widgetConfig: jsonb("widget_config").notNull().default({
+    primaryColor: "#af1f31",
+    position: "bottom-right",
+    welcomeMessage: "Hi! How can we help you today?",
+    showOnMobile: true,
+    showOnDesktop: true,
+  }),
+  aiConfig: jsonb("ai_config").notNull().default({
+    enabled: true,
+    model: "gpt-5",
+    systemPrompt: "You are a helpful customer service assistant.",
+    autoHandoff: true,
+    maxTokens: 500,
+  }),
+  emailConfig: jsonb("email_config").default({
+    enabled: false,
+    fromEmail: "",
+    notificationEmails: [],
+  }),
+  slackConfig: jsonb("slack_config").default({
+    enabled: false,
+    webhookUrl: "",
+    channel: "",
+  }),
+  trelloConfig: jsonb("trello_config").default({
+    enabled: false,
+    apiKey: "",
+    token: "",
+    boardId: "",
+  }),
+  businessHours: jsonb("business_hours").default({
+    enabled: false,
+    timezone: "UTC",
+    hours: {},
+  }),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const integrationLogs = pgTable("integration_logs", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull(), // email, slack, trello, webhook
+  conversationId: uuid("conversation_id").references(() => conversations.id),
+  status: text("status").notNull(), // success, failed, pending
+  payload: jsonb("payload"),
+  response: jsonb("response"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  conversations: many(conversations),
+  messages: many(messages),
+}));
+
+export const websitesRelations = relations(websites, ({ many }) => ({
+  conversations: many(conversations),
+}));
+
+export const conversationsRelations = relations(conversations, ({ one, many }) => ({
+  website: one(websites, {
+    fields: [conversations.websiteId],
+    references: [websites.id],
+  }),
+  assignedRepresentative: one(users, {
+    fields: [conversations.assignedRepresentativeId],
+    references: [users.id],
+  }),
+  messages: many(messages),
+}));
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  conversation: one(conversations, {
+    fields: [messages.conversationId],
+    references: [conversations.id],
+  }),
+  sender: one(users, {
+    fields: [messages.senderId],
+    references: [users.id],
+  }),
+}));
+
+export const integrationLogsRelations = relations(integrationLogs, ({ one }) => ({
+  conversation: one(conversations, {
+    fields: [integrationLogs.conversationId],
+    references: [conversations.id],
+  }),
+}));
+
+// Insert schemas
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWebsiteSchema = createInsertSchema(websites).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertConversationSchema = createInsertSchema(conversations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMessageSchema = createInsertSchema(messages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSettingsSchema = createInsertSchema(settings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+// Types
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type Website = typeof websites.$inferSelect;
+export type InsertWebsite = z.infer<typeof insertWebsiteSchema>;
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = z.infer<typeof insertConversationSchema>;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type Settings = typeof settings.$inferSelect;
+export type InsertSettings = z.infer<typeof insertSettingsSchema>;
+export type IntegrationLog = typeof integrationLogs.$inferSelect;
