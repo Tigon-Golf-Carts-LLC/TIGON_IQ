@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import defaultAvatar from "@assets/TIGON Chat Bot ICON_1757612559255.png";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -224,8 +225,9 @@ export default function RepresentativesPage() {
                     <div key={representative.id} className="p-4 border border-border rounded-lg">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarFallback className="bg-primary text-primary-foreground">
+                          <Avatar className="h-12 w-12 bg-white">
+                            <AvatarImage src={defaultAvatar} alt="Representative" />
+                            <AvatarFallback className="bg-white text-foreground">
                               {representative.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                             </AvatarFallback>
                           </Avatar>

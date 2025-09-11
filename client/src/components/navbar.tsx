@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import defaultAvatar from "@assets/TIGON Chat Bot ICON_1757612559255.png";
 import { Badge } from "@/components/ui/badge";
 import { 
   DropdownMenu,
@@ -40,8 +41,9 @@ export function Navbar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="flex items-center space-x-2" data-testid="user-menu">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-muted text-muted-foreground">
+                <Avatar className="h-8 w-8 bg-white">
+                  <AvatarImage src={defaultAvatar} alt="User" />
+                  <AvatarFallback className="bg-white text-foreground">
                     {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>

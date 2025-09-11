@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import defaultAvatar from "@assets/TIGON Chat Bot ICON_1757612559255.png";
 import { 
   MessageCircle, 
   Search,
@@ -82,8 +83,9 @@ export default function ConversationsPage() {
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback className="text-xs">
+                          <Avatar className="h-8 w-8 bg-white">
+                            <AvatarImage src={defaultAvatar} alt="Customer" />
+                            <AvatarFallback className="text-xs bg-white">
                               {conv.customerEmail?.[0]?.toUpperCase() || 'A'}
                             </AvatarFallback>
                           </Avatar>
@@ -131,8 +133,9 @@ export default function ConversationsPage() {
                 <div className="p-4 border-b border-border">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <Avatar>
-                        <AvatarFallback>
+                      <Avatar className="bg-white">
+                        <AvatarImage src={defaultAvatar} alt="Customer" />
+                        <AvatarFallback className="bg-white">
                           {conversationDetails.customerEmail?.[0]?.toUpperCase() || 'A'}
                         </AvatarFallback>
                       </Avatar>
