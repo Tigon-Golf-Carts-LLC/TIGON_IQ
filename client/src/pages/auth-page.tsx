@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageCircle, Shield, Zap, Users } from "lucide-react";
-import tigonIcon from "@assets/TIGON Chat Bot ICON_1757615716749.jpg";
+import tigonIcon from "@assets/TIGON Chat Bot ICON_1757615801322.jpg";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
