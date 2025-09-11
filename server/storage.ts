@@ -152,7 +152,7 @@ export class DatabaseStorage implements IStorage {
     return conversation || undefined;
   }
 
-  async getConversationWithDetails(id: string): Promise<any> {
+  async getConversationWithDetails(id: string): Promise<ConversationDetails | undefined> {
     const [conversation] = await db
       .select({
         conversation: conversations,
@@ -169,10 +169,28 @@ export class DatabaseStorage implements IStorage {
     const conversationMessages = await this.getConversationMessages(id);
 
     return {
-      ...conversation.conversation,
-      website: conversation.website,
-      representative: conversation.representative,
-      messages: conversationMessages,
+      id: conversation.conversation.id,
+      customerEmail: conversation.conversation.customerEmail,
+      customerName: conversation.conversation.customerName,
+      status: conversation.conversation.status,
+      createdAt: conversation.conversation.createdAt!,
+      website: conversation.website ? {
+        domain: conversation.website.domain,
+        name: conversation.website.name,
+      } : null,
+      representative: conversation.representative ? {
+        id: conversation.representative.id,
+        name: conversation.representative.name,
+        status: conversation.representative.status,
+      } : null,
+      lastMessage: null,
+      messages: conversationMessages.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        senderType: msg.senderType,
+        senderId: msg.senderId,
+        createdAt: msg.createdAt!,
+      })),
     };
   }
 
@@ -196,8 +214,8 @@ export class DatabaseStorage implements IStorage {
     return conversation || undefined;
   }
 
-  async getActiveConversations(): Promise<any[]> {
-    return await db
+  async getActiveConversations(): Promise<ConversationListItem[]> {
+    const results = await db
       .select({
         conversation: conversations,
         website: websites,
@@ -208,6 +226,24 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(conversations.assignedRepresentativeId, users.id))
       .where(or(eq(conversations.status, 'active'), eq(conversations.status, 'waiting')))
       .orderBy(desc(conversations.updatedAt));
+
+    return results.map(result => ({
+      id: result.conversation.id,
+      customerEmail: result.conversation.customerEmail,
+      customerName: result.conversation.customerName,
+      status: result.conversation.status,
+      createdAt: result.conversation.createdAt ?? new Date(),
+      website: result.website ? {
+        domain: result.website.domain,
+        name: result.website.name,
+      } : null,
+      representative: result.representative ? {
+        id: result.representative.id,
+        name: result.representative.name,
+        status: result.representative.status,
+      } : null,
+      lastMessage: null, // TODO: Add last message query
+    }));
   }
 
   async getConversationsByRepresentative(repId: string): Promise<any[]> {
@@ -225,7 +261,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(conversations.updatedAt));
   }
 
-  async getConversationStats(): Promise<any> {
+  async getConversationStats(): Promise<StatsResponse> {
     const [stats] = await db
       .select({
         total: sql<number>`count(*)`,
@@ -242,12 +278,18 @@ export class DatabaseStorage implements IStorage {
       .from(users)
       .where(and(eq(users.role, 'representative'), eq(users.status, 'online')));
 
+    const totalReps = await db
+      .select({
+        count: sql<number>`count(*)`,
+      })
+      .from(users)
+      .where(eq(users.role, 'representative'));
+
     return {
       totalConversations: stats.total || 0,
       activeConversations: stats.active || 0,
-      waitingConversations: stats.waiting || 0,
-      closedConversations: stats.closed || 0,
       onlineRepresentatives: onlineReps.count || 0,
+      totalRepresentatives: totalReps[0]?.count || 0,
     };
   }
 
@@ -280,16 +322,10 @@ export class DatabaseStorage implements IStorage {
       .orderBy(messages.createdAt);
   }
 
-  async getRecentMessages(limit: number = 50): Promise<any[]> {
+  async getRecentMessages(limit: number = 50): Promise<Message[]> {
     return await db
-      .select({
-        message: messages,
-        conversation: conversations,
-        sender: users,
-      })
+      .select()
       .from(messages)
-      .leftJoin(conversations, eq(messages.conversationId, conversations.id))
-      .leftJoin(users, eq(messages.senderId, users.id))
       .orderBy(desc(messages.createdAt))
       .limit(limit);
   }

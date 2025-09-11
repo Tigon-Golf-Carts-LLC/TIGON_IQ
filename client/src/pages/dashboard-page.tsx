@@ -17,20 +17,22 @@ import {
   Table
 } from "lucide-react";
 
+import { StatsResponse, ConversationListItem, User, Settings } from "@shared/schema";
+
 export default function DashboardPage() {
-  const { data: stats = {}, isLoading } = useQuery({
+  const { data: stats, isLoading } = useQuery<StatsResponse>({
     queryKey: ["/api/stats"],
   });
 
-  const { data: conversations = [] } = useQuery({
+  const { data: conversations } = useQuery<ConversationListItem[]>({
     queryKey: ["/api/conversations"],
   });
 
-  const { data: representatives = [] } = useQuery({
+  const { data: representatives } = useQuery<User[]>({
     queryKey: ["/api/representatives"],
   });
 
-  const { data: settings = {} } = useQuery({
+  const { data: settings } = useQuery<Settings>({
     queryKey: ["/api/settings"],
   });
 
@@ -65,7 +67,7 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Active Conversations</p>
                     <p className="text-2xl font-bold text-foreground" data-testid="text-active-conversations">
-                      {(stats as any)?.activeConversations || 0}
+                      {stats?.activeConversations || 0}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -81,7 +83,7 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Online Representatives</p>
                     <p className="text-2xl font-bold text-foreground" data-testid="text-online-representatives">
-                      {(stats as any)?.onlineRepresentatives || 0}
+                      {stats?.onlineRepresentatives || 0}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -133,25 +135,25 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3" data-testid="recent-conversations">
-                    {conversations?.slice(0, 5).map((conv: any) => (
-                      <div key={conv.conversation.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    {conversations?.slice(0, 5).map((conv) => (
+                      <div key={conv.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                             <span className="text-xs font-medium text-primary">
-                              {conv.conversation.customerEmail?.[0]?.toUpperCase() || 'A'}
+                              {conv.customerEmail?.[0]?.toUpperCase() || 'A'}
                             </span>
                           </div>
                           <div>
-                            <p className="text-sm font-medium" data-testid={`conversation-customer-${conv.conversation.id}`}>
-                              {conv.conversation.customerEmail || 'Anonymous'}
+                            <p className="text-sm font-medium" data-testid={`conversation-customer-${conv.id}`}>
+                              {conv.customerEmail || 'Anonymous'}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {conv.website?.domain || 'Unknown website'}
                             </p>
                           </div>
                         </div>
-                        <Badge variant={conv.conversation.status === 'active' ? 'default' : 'secondary'}>
-                          {conv.conversation.status}
+                        <Badge variant={conv.status === 'active' ? 'default' : 'secondary'}>
+                          {conv.status}
                         </Badge>
                       </div>
                     )) || (

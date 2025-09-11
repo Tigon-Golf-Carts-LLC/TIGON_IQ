@@ -17,15 +17,17 @@ import {
   Send
 } from "lucide-react";
 
+import { ConversationListItem, ConversationDetails } from "@shared/schema";
+
 export default function ConversationsPage() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
 
-  const { data: conversations = [] } = useQuery({
+  const { data: conversations } = useQuery<ConversationListItem[]>({
     queryKey: ["/api/conversations"],
   });
 
-  const { data: conversationDetails = {} } = useQuery({
+  const { data: conversationDetails } = useQuery<ConversationDetails>({
     queryKey: ["/api/conversations", selectedConversation],
     enabled: !!selectedConversation,
   });
@@ -68,26 +70,26 @@ export default function ConversationsPage() {
             
             <ScrollArea className="flex-1">
               <div className="p-4 space-y-3" data-testid="conversations-list">
-                {conversations?.map((conv: any) => (
+                {conversations?.map((conv) => (
                   <Card 
-                    key={conv.conversation.id}
+                    key={conv.id}
                     className={`cursor-pointer transition-colors hover:bg-accent ${
-                      selectedConversation === conv.conversation.id ? 'ring-2 ring-primary' : ''
+                      selectedConversation === conv.id ? 'ring-2 ring-primary' : ''
                     }`}
-                    onClick={() => setSelectedConversation(conv.conversation.id)}
-                    data-testid={`conversation-item-${conv.conversation.id}`}
+                    onClick={() => setSelectedConversation(conv.id)}
+                    data-testid={`conversation-item-${conv.id}`}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-8 w-8">
                             <AvatarFallback className="text-xs">
-                              {conv.conversation.customerEmail?.[0]?.toUpperCase() || 'A'}
+                              {conv.customerEmail?.[0]?.toUpperCase() || 'A'}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium text-sm" data-testid={`conversation-customer-${conv.conversation.id}`}>
-                              {conv.conversation.customerEmail || 'Anonymous'}
+                            <p className="font-medium text-sm" data-testid={`conversation-customer-${conv.id}`}>
+                              {conv.customerEmail || 'Anonymous'}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {conv.website?.domain || 'Unknown website'}
@@ -95,15 +97,15 @@ export default function ConversationsPage() {
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <div className={`w-2 h-2 rounded-full ${getStatusColor(conv.conversation.status)}`}></div>
+                          <div className={`w-2 h-2 rounded-full ${getStatusColor(conv.status)}`}></div>
                           <Badge variant="outline" className="text-xs">
-                            {conv.conversation.status}
+                            {conv.status}
                           </Badge>
                         </div>
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Updated {formatTime(conv.conversation.updatedAt)}</span>
-                        {conv.conversation.isAiAssisted && (
+                        <span>Updated {formatTime(conv.createdAt)}</span>
+                        {conv.representative === null && (
                           <Badge variant="secondary" className="text-xs">
                             AI Assisted
                           </Badge>

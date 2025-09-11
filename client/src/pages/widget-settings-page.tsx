@@ -23,15 +23,17 @@ import {
   Eye
 } from "lucide-react";
 
+import { Settings, Website } from "@shared/schema";
+
 export default function WidgetSettingsPage() {
   const { toast } = useToast();
   const [newPageUrl, setNewPageUrl] = useState("");
 
-  const { data: settings = {} } = useQuery({
+  const { data: settings } = useQuery<Settings>({
     queryKey: ["/api/settings"],
   });
 
-  const { data: websites = [] } = useQuery({
+  const { data: websites } = useQuery<Website[]>({
     queryKey: ["/api/websites"],
   });
 

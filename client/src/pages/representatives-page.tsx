@@ -21,16 +21,18 @@ import {
   MoreVertical
 } from "lucide-react";
 
+import { User, ConversationListItem } from "@shared/schema";
+
 export default function RepresentativesPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: representatives, isLoading } = useQuery({
+  const { data: representatives, isLoading } = useQuery<User[]>({
     queryKey: ["/api/representatives"],
   });
 
-  const { data: conversations } = useQuery({
+  const { data: conversations } = useQuery<ConversationListItem[]>({
     queryKey: ["/api/conversations"],
   });
 
