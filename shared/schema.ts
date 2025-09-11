@@ -226,3 +226,52 @@ export const conversationDetailsSchema = conversationListItemSchema.extend({
   })),
 });
 export type ConversationDetails = z.infer<typeof conversationDetailsSchema>;
+
+// WebSocket Message Schemas
+export const wsJoinConversationSchema = z.object({
+  type: z.literal("join_conversation"),
+  conversationId: z.string().uuid(),
+  userId: z.string().uuid().optional(),
+});
+export type WSJoinConversation = z.infer<typeof wsJoinConversationSchema>;
+
+export const wsSendMessageSchema = z.object({
+  type: z.literal("send_message"),
+  content: z.string().min(1).max(5000),
+  // Note: conversationId, senderType, and senderId will be derived server-side for security
+});
+export type WSSendMessage = z.infer<typeof wsSendMessageSchema>;
+
+export const wsTypingSchema = z.object({
+  type: z.literal("typing"),
+  isTyping: z.boolean(),
+  // Note: conversationId and userId will be derived from WebSocket connection
+});
+export type WSTyping = z.infer<typeof wsTypingSchema>;
+
+export const wsMessageSchema = z.union([
+  wsJoinConversationSchema,
+  wsSendMessageSchema, 
+  wsTypingSchema,
+]);
+export type WSMessage = z.infer<typeof wsMessageSchema>;
+
+// Path/Query Parameter Schemas
+export const uuidParamSchema = z.object({
+  id: z.string().uuid()
+});
+
+export const widgetConfigQuerySchema = z.object({
+  domain: z.string().min(1).regex(/^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*$/, "Invalid domain format")
+});
+
+export const publicMessageSchema = z.object({
+  conversationId: z.string().uuid(),
+  content: z.string().min(1).max(5000),
+  senderType: z.literal("customer"),
+  messageType: z.literal("text")
+});
+
+export const representativeStatusSchema = z.object({
+  status: z.enum(["online", "offline", "busy", "away"])
+});

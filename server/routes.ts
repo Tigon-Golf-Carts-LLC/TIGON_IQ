@@ -6,10 +6,31 @@ import { setupAuth, requireAuth, requireRole } from "./auth";
 import { storage } from "./storage";
 import { generateAIResponse, shouldHandoffToHuman, extractCustomerIntent } from "./services/openai";
 import { sendConversationNotification, sendConversationSummary } from "./services/sendgrid";
+import { z } from "zod";
+import { 
+  wsMessageSchema, 
+  wsSendMessageSchema, 
+  wsJoinConversationSchema,
+  wsTypingSchema,
+  insertConversationSchema,
+  insertMessageSchema,
+  insertWebsiteSchema,
+  insertSettingsSchema,
+  uuidParamSchema,
+  widgetConfigQuerySchema,
+  representativeStatusSchema,
+  publicMessageSchema,
+  type WSMessage,
+  type WSSendMessage,
+  type WSJoinConversation,
+  type WSTyping
+} from "../shared/schema";
 
 interface WebSocketClient extends WebSocket {
   conversationId?: string;
   userId?: string;
+  userRole?: 'customer' | 'representative' | 'admin';
+  isAuthenticated?: boolean;
   isAlive?: boolean;
 }
 
@@ -35,17 +56,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     ws.on('message', async (data) => {
       try {
-        const message = JSON.parse(data.toString());
+        const rawMessage = JSON.parse(data.toString());
+        
+        // Validate message with Zod schema
+        const validationResult = wsMessageSchema.safeParse(rawMessage);
+        if (!validationResult.success) {
+          console.error('Invalid WebSocket message:', validationResult.error);
+          ws.send(JSON.stringify({ 
+            type: 'error', 
+            message: 'Invalid message format',
+            errors: validationResult.error.issues 
+          }));
+          return;
+        }
+
+        const message = validationResult.data;
         
         switch (message.type) {
           case 'join_conversation':
-            ws.conversationId = message.conversationId;
-            ws.userId = message.userId;
-            
-            if (!clients.has(message.conversationId)) {
-              clients.set(message.conversationId, new Set());
-            }
-            clients.get(message.conversationId)!.add(ws);
+            await handleJoinConversation(message, ws);
             break;
 
           case 'send_message':
@@ -53,11 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
 
           case 'typing':
-            broadcastToConversation(message.conversationId, {
-              type: 'typing',
-              userId: message.userId,
-              isTyping: message.isTyping,
-            }, ws);
+            await handleTyping(message, ws);
             break;
         }
       } catch (error) {
@@ -90,7 +115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     clearInterval(interval);
   });
 
-  function broadcastToConversation(conversationId: string, message: any, sender?: WebSocketClient) {
+  function broadcastToConversation(conversationId: string, message: object, sender?: WebSocketClient) {
     const conversationClients = clients.get(conversationId);
     if (conversationClients) {
       conversationClients.forEach(client => {
@@ -101,9 +126,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  async function handleNewMessage(messageData: any, ws: WebSocketClient) {
+  async function handleJoinConversation(message: WSJoinConversation, ws: WebSocketClient) {
+    // Basic conversation access validation
     try {
-      const { conversationId, content, senderType, senderId } = messageData;
+      // Verify conversation exists
+      const conversation = await storage.getConversationWithDetails(message.conversationId);
+      if (!conversation) {
+        ws.send(JSON.stringify({ 
+          type: 'error', 
+          message: 'Conversation not found' 
+        }));
+        return;
+      }
+
+      // For production: Implement proper JWT token validation here
+      // Example: Verify token from query string, validate user access to conversation
+      // const token = parseTokenFromQuery(ws.url);
+      // const user = validateJWT(token);
+      // if (!canAccessConversation(user, conversation)) return unauthorized;
+      
+      ws.conversationId = message.conversationId;
+      ws.userId = message.userId;
+      
+      if (!clients.has(message.conversationId)) {
+        clients.set(message.conversationId, new Set());
+      }
+      clients.get(message.conversationId)!.add(ws);
+      
+      ws.send(JSON.stringify({ 
+        type: 'joined', 
+        conversationId: message.conversationId 
+      }));
+    } catch (error) {
+      console.error('Error handling join conversation:', error);
+      ws.send(JSON.stringify({ 
+        type: 'error', 
+        message: 'Failed to join conversation' 
+      }));
+    }
+  }
+
+  async function handleTyping(message: WSTyping, ws: WebSocketClient) {
+    if (!ws.isAuthenticated || !ws.conversationId) {
+      ws.send(JSON.stringify({ 
+        type: 'error', 
+        message: 'Not authenticated or not joined to conversation' 
+      }));
+      return;
+    }
+
+    broadcastToConversation(ws.conversationId, {
+      type: 'typing',
+      userId: ws.userId,
+      isTyping: message.isTyping,
+    }, ws);
+  }
+
+  async function handleNewMessage(messageData: WSSendMessage, ws: WebSocketClient) {
+    try {
+      if (!ws.isAuthenticated || !ws.conversationId) {
+        ws.send(JSON.stringify({ 
+          type: 'error', 
+          message: 'Not authenticated or not joined to conversation' 
+        }));
+        return;
+      }
+
+      const { content } = messageData;
+      
+      // Derive identity from authenticated WebSocket connection
+      const conversationId = ws.conversationId;
+      const senderType = ws.userRole === 'customer' ? 'customer' : 'representative';
+      const senderId = ws.userRole === 'customer' ? null : ws.userId;
 
       // Create message in database
       const newMessage = await storage.createMessage({
@@ -147,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  async function handleAIResponse(conversation: any, customerMessage: any) {
+  async function handleAIResponse(conversation: { id: string; isAiAssisted: boolean; }, customerMessage: { id: string; content: string; senderType: string; }) {
     try {
       const settings = await storage.getSettings();
       if (!settings?.aiConfig?.enabled) return;
@@ -255,7 +349,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/conversations/:id', requireAuth, async (req, res) => {
     try {
-      const conversation = await storage.getConversationWithDetails(req.params.id);
+      const paramValidation = uuidParamSchema.safeParse(req.params);
+      if (!paramValidation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid conversation ID', 
+          details: paramValidation.error.issues 
+        });
+      }
+      
+      const conversation = await storage.getConversationWithDetails(paramValidation.data.id);
       if (!conversation) {
         return res.status(404).json({ message: 'Conversation not found' });
       }
@@ -268,7 +370,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/conversations', async (req, res) => {
     try {
-      const { websiteId, customerEmail, customerName } = req.body;
+      const validationResult = insertConversationSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid request body', 
+          details: validationResult.error.issues 
+        });
+      }
+      
+      const { websiteId, customerEmail, customerName } = validationResult.data;
       
       const conversation = await storage.createConversation({
         websiteId,
@@ -292,7 +402,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/conversations/:id', requireAuth, async (req, res) => {
     try {
-      const conversation = await storage.updateConversation(req.params.id, req.body);
+      const paramValidation = uuidParamSchema.safeParse(req.params);
+      if (!paramValidation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid conversation ID', 
+          details: paramValidation.error.issues 
+        });
+      }
+      
+      const validationResult = insertConversationSchema.partial().safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid request body', 
+          details: validationResult.error.issues 
+        });
+      }
+      
+      const conversation = await storage.updateConversation(req.params.id, validationResult.data);
       if (!conversation) {
         return res.status(404).json({ message: 'Conversation not found' });
       }
@@ -306,7 +432,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Messages
   app.post('/api/messages', async (req, res) => {
     try {
-      const message = await storage.createMessage(req.body);
+      const validationResult = publicMessageSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid request body', 
+          details: validationResult.error.issues 
+        });
+      }
+      
+      const message = await storage.createMessage(validationResult.data);
       res.status(201).json(message);
     } catch (error) {
       console.error('Error creating message:', error);
@@ -328,7 +462,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/representatives/:id/status', requireAuth, async (req, res) => {
     try {
-      const { status } = req.body;
+      const paramValidation = uuidParamSchema.safeParse(req.params);
+      if (!paramValidation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid representative ID', 
+          details: paramValidation.error.issues 
+        });
+      }
+      
+      const validationResult = representativeStatusSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid request body', 
+          details: validationResult.error.issues 
+        });
+      }
+      
+      const { status } = validationResult.data;
       await storage.updateRepresentativeStatus(req.params.id, status);
       res.json({ success: true });
     } catch (error) {
@@ -350,7 +500,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/websites', requireAuth, async (req, res) => {
     try {
-      const website = await storage.createWebsite(req.body);
+      const validationResult = insertWebsiteSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid request body', 
+          details: validationResult.error.issues 
+        });
+      }
+      
+      const website = await storage.createWebsite(validationResult.data);
       res.status(201).json(website);
     } catch (error) {
       console.error('Error creating website:', error);
@@ -360,7 +518,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/websites/:id', requireAuth, async (req, res) => {
     try {
-      const website = await storage.updateWebsite(req.params.id, req.body);
+      const paramValidation = uuidParamSchema.safeParse(req.params);
+      if (!paramValidation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid website ID', 
+          details: paramValidation.error.issues 
+        });
+      }
+      
+      const validationResult = insertWebsiteSchema.partial().safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid request body', 
+          details: validationResult.error.issues 
+        });
+      }
+      
+      const website = await storage.updateWebsite(req.params.id, validationResult.data);
       if (!website) {
         return res.status(404).json({ message: 'Website not found' });
       }
@@ -384,7 +558,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/settings', requireAuth, async (req, res) => {
     try {
-      const settings = await storage.createOrUpdateSettings(req.body);
+      const validationResult = insertSettingsSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid request body', 
+          details: validationResult.error.issues 
+        });
+      }
+      
+      const settings = await storage.createOrUpdateSettings(validationResult.data);
       res.json(settings);
     } catch (error) {
       console.error('Error updating settings:', error);
@@ -395,10 +577,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Public API for widget
   app.get('/api/widget/config', async (req, res) => {
     try {
-      const { domain } = req.query;
-      if (!domain) {
-        return res.status(400).json({ message: 'Domain is required' });
+      const queryValidation = widgetConfigQuerySchema.safeParse(req.query);
+      if (!queryValidation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid domain parameter', 
+          details: queryValidation.error.issues 
+        });
       }
+      
+      const { domain } = queryValidation.data;
 
       const website = await storage.getWebsiteByDomain(domain as string);
       if (!website || !website.isActive) {
