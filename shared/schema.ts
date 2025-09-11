@@ -185,6 +185,35 @@ export type Settings = typeof settings.$inferSelect;
 export type InsertSettings = z.infer<typeof insertSettingsSchema>;
 export type IntegrationLog = typeof integrationLogs.$inferSelect;
 
+// Extended types for JSONB fields
+export type AIConfig = {
+  enabled: boolean;
+  model: string;
+  systemPrompt: string;
+  autoHandoff: boolean;
+  maxTokens: number;
+};
+
+export type EmailConfig = {
+  enabled: boolean;
+  fromEmail: string;
+  notificationEmails: string[];
+};
+
+export type WidgetConfig = {
+  primaryColor: string;
+  position: string;
+  welcomeMessage: string;
+  showOnMobile: boolean;
+  showOnDesktop: boolean;
+};
+
+export type ExtendedSettings = Settings & {
+  aiConfig: AIConfig;
+  emailConfig: EmailConfig;
+  widgetConfig: WidgetConfig;
+};
+
 // API Response Types
 export const statsResponseSchema = z.object({
   activeConversations: z.number(),
@@ -217,6 +246,11 @@ export const conversationListItemSchema = z.object({
 export type ConversationListItem = z.infer<typeof conversationListItemSchema>;
 
 export const conversationDetailsSchema = conversationListItemSchema.extend({
+  isAiAssisted: z.boolean(),
+  websiteId: z.string().nullable(),
+  assignedRepresentativeId: z.string().nullable(),
+  metadata: z.record(z.any()).default({}),
+  updatedAt: z.date(),
   messages: z.array(z.object({
     id: z.string(),
     content: z.string(),

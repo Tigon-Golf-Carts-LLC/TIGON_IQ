@@ -23,7 +23,10 @@ import {
   type WSMessage,
   type WSSendMessage,
   type WSJoinConversation,
-  type WSTyping
+  type WSTyping,
+  type ExtendedSettings,
+  type AIConfig,
+  type EmailConfig
 } from "../shared/schema";
 
 interface WebSocketClient extends WebSocket {
@@ -225,7 +228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Send email notifications if configured
-      const settings = await storage.getSettings();
+      const settings = await storage.getSettings() as ExtendedSettings | undefined;
       if (settings?.emailConfig?.enabled && senderType === 'customer') {
         await sendConversationNotification(
           conversation,
@@ -243,7 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   async function handleAIResponse(conversation: { id: string; isAiAssisted: boolean; }, customerMessage: { id: string; content: string; senderType: string; }) {
     try {
-      const settings = await storage.getSettings();
+      const settings = await storage.getSettings() as ExtendedSettings | undefined;
       if (!settings?.aiConfig?.enabled) return;
 
       // Get conversation history for context

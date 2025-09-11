@@ -174,6 +174,11 @@ export class DatabaseStorage implements IStorage {
       customerName: conversation.conversation.customerName,
       status: conversation.conversation.status,
       createdAt: conversation.conversation.createdAt!,
+      isAiAssisted: conversation.conversation.isAiAssisted,
+      websiteId: conversation.conversation.websiteId,
+      assignedRepresentativeId: conversation.conversation.assignedRepresentativeId,
+      metadata: conversation.conversation.metadata || {},
+      updatedAt: conversation.conversation.updatedAt!,
       website: conversation.website ? {
         domain: conversation.website.domain,
         name: conversation.website.name,
