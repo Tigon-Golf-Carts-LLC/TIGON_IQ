@@ -1,0 +1,222 @@
+Complete Customer Service Chatbot System - Replit Project Prompt
+Project Overview
+Build a comprehensive customer service chatbot system with the following components:
+
+Embeddable chat widget for WordPress websites
+Admin dashboard for managing chat visibility and settings
+Multi-channel message routing (Email, Slack, Trello, APIs)
+ChatGPT integration for automated responses
+Representative mobile/web interface
+Voice-to-text messaging capabilities
+Core Requirements
+1. Embeddable Chat Widget
+Create a JavaScript widget that can be embedded on any WordPress site
+Position: Bottom-right corner, non-intrusive overlay
+Should NOT interfere with existing website layout
+Responsive design for mobile and desktop
+Easy one-line embed code: <script src="your-domain.com/chatbot.js"></script>
+Customizable colors and branding
+Smooth animations for open/close states
+2. Admin Dashboard (Web Interface)
+Page Management:
+
+Interface to select which pages/URLs the chatbot appears on
+Whitelist/blacklist functionality
+WordPress page detection and selection
+Preview mode to test widget placement
+Settings Panel:
+
+Customize widget appearance (colors, position, size)
+Configure business hours
+Set automated responses and triggers
+Manage representative availability status
+3. Message Routing & Integrations
+Email Integration:
+
+Send all conversations to specified email addresses
+Create email threads for ongoing conversations
+Email notifications for new messages
+Slack Integration:
+
+Route messages to designated Slack channels
+Real-time notifications for new chats
+Allow responses from Slack back to customers
+Trello Integration:
+
+Create Trello cards for each conversation
+Update cards with conversation progress
+Custom fields for customer information
+API Webhooks:
+
+Configure multiple API endpoints for message payloads
+Customizable webhook formats (JSON, XML)
+Retry logic and error handling
+Real-time and batch sending options
+4. ChatGPT Integration
+Integrate OpenAI API for automated responses
+Smart handoff to human representatives
+Customizable AI personality and knowledge base
+Fallback responses when AI is uncertain
+Context awareness for multi-turn conversations
+Representative override capabilities
+5. Representative Interface
+Web Dashboard:
+
+Real-time chat interface with multiple conversation threads
+Customer information panel
+Chat history and analytics
+File sharing capabilities
+Typing indicators and read receipts
+Quick response templates
+Mobile App Features:
+
+Cross-platform (iOS/Android) using React Native or Flutter
+Push notifications for new messages
+Voice-to-text integration using device speech recognition
+Photo upload for representative profiles
+Offline message queuing
+Dark/light mode toggle
+Representative Management:
+
+Profile creation with name and photo upload
+Online/offline status management
+Shift scheduling and availability
+Performance metrics and chat volume tracking
+6. Voice & Media Features
+Voice message recording and playback
+Voice-to-text conversion for representatives
+Image and file sharing
+Screen sharing capabilities (web interface)
+Audio/video call integration (optional)
+Design Specifications
+Color Scheme
+Primary Color: 
+#af1f31 (Deep Red)
+Background: White (
+#FFFFFF)
+Text: Dark gray/black for readability
+Accent: Light gray for borders and secondary elements
+Hover States: Darker shade of 
+#af1f31
+Default Branding
+Chatbot Icon: White logo on transparent PNG background
+Widget Header: 
+#af1f31 background with white text
+Message Bubbles: Customer (light gray), Representative (
+#af1f31)
+Buttons: 
+#af1f31 background with white text
+Device Detection & Visibility
+JavaScript-based device detection (mobile vs desktop)
+CSS media queries for responsive breakpoints
+Admin toggle switches for device-specific visibility
+Real-time preview showing mobile and desktop versions
+Backend:
+
+Node.js with Express.js or Python with FastAPI
+PostgreSQL or MongoDB for data storage
+Redis for real-time messaging and caching
+Socket.io for real-time communication
+Frontend (Web):
+
+React.js or Vue.js for admin dashboard
+Vanilla JavaScript for embeddable widget
+Tailwind CSS or Bootstrap for styling
+Mobile App:
+
+React Native for cross-platform development
+Expo for rapid development and deployment
+Real-time & APIs:
+
+WebSocket connections for live chat
+RESTful APIs for all integrations
+JWT authentication for representatives
+Rate limiting and security middleware
+External Integrations:
+
+OpenAI API for ChatGPT integration
+SendGrid or Nodemailer for email
+Slack Web API
+Trello API
+Speech-to-text APIs (Google Speech API or similar)
+Database Schema Suggestions
+Tables/Collections:
+
+conversations - Chat sessions and metadata
+messages - Individual chat messages
+representatives - User accounts and profiles
+websites - Registered WordPress sites
+settings - Configuration and preferences
+integrations - API keys and webhook URLs
+File Structure
+/backend
+  /routes (API endpoints)
+  /models (database schemas)
+  /middleware (auth, validation)
+  /services (integrations, AI)
+  /utils (helpers, constants)
+
+/frontend-dashboard
+  /components (React components)
+  /pages (dashboard views)
+  /services (API calls)
+  /utils (helpers)
+
+/widget
+  /src (embeddable widget code)
+  /dist (compiled widget)
+
+/mobile-app
+  /src (React Native components)
+  /services (API integration)
+  /screens (app screens)
+Key Features to Implement
+Phase 1 (MVP):
+
+Basic chat widget and embedding
+Simple admin dashboard
+Email integration
+Representative web interface
+Basic ChatGPT integration
+Phase 2 (Enhanced):
+
+Mobile app development
+Voice-to-text features
+Slack and Trello integrations
+Advanced analytics
+Multi-language support
+Phase 3 (Advanced):
+
+AI conversation analytics
+Customer satisfaction surveys
+Advanced routing and escalation
+Custom API integrations
+White-label capabilities
+Security Considerations
+HTTPS/SSL for all communications
+JWT token authentication
+Rate limiting on all endpoints
+Input validation and sanitization
+CORS configuration for widget embedding
+Data encryption for sensitive information
+GDPR compliance features
+Deployment Requirements
+Scalable cloud hosting (Railway, Render, or similar)
+CDN for widget distribution
+Database backups and monitoring
+Environment variable management
+CI/CD pipeline setup
+Load balancing for high traffic
+Getting Started Instructions
+Set up the project structure with the recommended tech stack
+Create the database schema and models
+Build the basic REST API endpoints
+Develop the embeddable widget first
+Create the admin dashboard for configuration
+Implement ChatGPT integration
+Build the representative interface
+Add integrations (email, Slack, Trello)
+Develop the mobile app
+Add voice features and advanced functionality
+Please build this as a production-ready system with proper error handling, logging, and scalability in mind. Include comprehensive documentation and setup instructions.
+
