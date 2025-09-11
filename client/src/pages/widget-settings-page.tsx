@@ -27,11 +27,11 @@ export default function WidgetSettingsPage() {
   const { toast } = useToast();
   const [newPageUrl, setNewPageUrl] = useState("");
 
-  const { data: settings } = useQuery({
+  const { data: settings = {} } = useQuery({
     queryKey: ["/api/settings"],
   });
 
-  const { data: websites } = useQuery({
+  const { data: websites = [] } = useQuery({
     queryKey: ["/api/websites"],
   });
 

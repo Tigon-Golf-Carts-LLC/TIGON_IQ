@@ -2,7 +2,8 @@ import {
   users, websites, conversations, messages, settings, integrationLogs,
   type User, type InsertUser, type Website, type InsertWebsite,
   type Conversation, type InsertConversation, type Message, type InsertMessage,
-  type Settings, type InsertSettings, type IntegrationLog
+  type Settings, type InsertSettings, type IntegrationLog,
+  type StatsResponse, type ConversationListItem, type ConversationDetails
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, sql } from "drizzle-orm";
@@ -31,18 +32,18 @@ export interface IStorage {
 
   // Conversation methods
   getConversation(id: string): Promise<Conversation | undefined>;
-  getConversationWithDetails(id: string): Promise<any>;
+  getConversationWithDetails(id: string): Promise<ConversationDetails | undefined>;
   createConversation(conversation: InsertConversation): Promise<Conversation>;
   updateConversation(id: string, updates: Partial<Conversation>): Promise<Conversation | undefined>;
-  getActiveConversations(): Promise<any[]>;
-  getConversationsByRepresentative(repId: string): Promise<any[]>;
-  getConversationStats(): Promise<any>;
+  getActiveConversations(): Promise<ConversationListItem[]>;
+  getConversationsByRepresentative(repId: string): Promise<ConversationListItem[]>;
+  getConversationStats(): Promise<StatsResponse>;
 
   // Message methods
   getMessage(id: string): Promise<Message | undefined>;
   createMessage(message: InsertMessage): Promise<Message>;
   getConversationMessages(conversationId: string): Promise<Message[]>;
-  getRecentMessages(limit?: number): Promise<any[]>;
+  getRecentMessages(limit?: number): Promise<Message[]>;
 
   // Settings methods
   getSettings(): Promise<Settings | undefined>;
@@ -53,11 +54,11 @@ export interface IStorage {
   getIntegrationLogs(conversationId?: string): Promise<IntegrationLog[]>;
 
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
 export class DatabaseStorage implements IStorage {
-  public sessionStore: session.SessionStore;
+  public sessionStore: session.Store;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 

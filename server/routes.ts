@@ -189,8 +189,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate AI response
       const aiResponse = await generateAIResponse(chatHistory, {
-        systemPrompt: settings.aiConfig.systemPrompt,
-        maxTokens: settings.aiConfig.maxTokens,
+        systemPrompt: settings.aiConfig?.systemPrompt || 'You are a helpful customer service assistant.',
+        maxTokens: settings.aiConfig?.maxTokens || 500,
       });
 
       // Save AI response

@@ -18,19 +18,19 @@ import {
 } from "lucide-react";
 
 export default function DashboardPage() {
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats = {}, isLoading } = useQuery({
     queryKey: ["/api/stats"],
   });
 
-  const { data: conversations } = useQuery({
+  const { data: conversations = [] } = useQuery({
     queryKey: ["/api/conversations"],
   });
 
-  const { data: representatives } = useQuery({
+  const { data: representatives = [] } = useQuery({
     queryKey: ["/api/representatives"],
   });
 
-  const { data: settings } = useQuery({
+  const { data: settings = {} } = useQuery({
     queryKey: ["/api/settings"],
   });
 
@@ -65,7 +65,7 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Active Conversations</p>
                     <p className="text-2xl font-bold text-foreground" data-testid="text-active-conversations">
-                      {stats?.activeConversations || 0}
+                      {(stats as any)?.activeConversations || 0}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -81,7 +81,7 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Online Representatives</p>
                     <p className="text-2xl font-bold text-foreground" data-testid="text-online-representatives">
-                      {stats?.onlineRepresentatives || 0}
+                      {(stats as any)?.onlineRepresentatives || 0}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">

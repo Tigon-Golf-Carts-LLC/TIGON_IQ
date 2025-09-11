@@ -184,3 +184,45 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Settings = typeof settings.$inferSelect;
 export type InsertSettings = z.infer<typeof insertSettingsSchema>;
 export type IntegrationLog = typeof integrationLogs.$inferSelect;
+
+// API Response Types
+export const statsResponseSchema = z.object({
+  activeConversations: z.number(),
+  totalConversations: z.number(), 
+  onlineRepresentatives: z.number(),
+  totalRepresentatives: z.number(),
+});
+export type StatsResponse = z.infer<typeof statsResponseSchema>;
+
+export const conversationListItemSchema = z.object({
+  id: z.string(),
+  customerEmail: z.string().nullable(),
+  customerName: z.string().nullable(),
+  status: z.string(),
+  createdAt: z.date(),
+  website: z.object({
+    domain: z.string(),
+    name: z.string(),
+  }).nullable(),
+  representative: z.object({
+    id: z.string(),
+    name: z.string(),
+    status: z.string(),
+  }).nullable(),
+  lastMessage: z.object({
+    content: z.string(),
+    createdAt: z.date(),
+  }).nullable(),
+});
+export type ConversationListItem = z.infer<typeof conversationListItemSchema>;
+
+export const conversationDetailsSchema = conversationListItemSchema.extend({
+  messages: z.array(z.object({
+    id: z.string(),
+    content: z.string(),
+    senderType: z.string(),
+    senderId: z.string().nullable(),
+    createdAt: z.date(),
+  })),
+});
+export type ConversationDetails = z.infer<typeof conversationDetailsSchema>;

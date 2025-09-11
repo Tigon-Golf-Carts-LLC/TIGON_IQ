@@ -21,11 +21,11 @@ export default function ConversationsPage() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
 
-  const { data: conversations } = useQuery({
+  const { data: conversations = [] } = useQuery({
     queryKey: ["/api/conversations"],
   });
 
-  const { data: conversationDetails } = useQuery({
+  const { data: conversationDetails = {} } = useQuery({
     queryKey: ["/api/conversations", selectedConversation],
     enabled: !!selectedConversation,
   });
