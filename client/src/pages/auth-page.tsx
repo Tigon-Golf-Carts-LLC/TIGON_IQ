@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageCircle, Shield, Zap, Users } from "lucide-react";
-import tigonIcon from "@assets/TIGON Chat Bot ICON_1757612492186.png";
+import tigonIcon from "@assets/TIGON Chat Bot ICON_1757612559255.png";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
@@ -40,8 +40,8 @@ export default function AuthPage() {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
-            <div className="mx-auto w-16 h-16 bg-white rounded-lg flex items-center justify-center mb-4">
-              <img src={tigonIcon} alt="TIGON IQ" className="h-8 w-8 bg-white rounded" />
+            <div className="mx-auto w-16 h-16 bg-white rounded-lg flex items-center justify-center mb-4 p-2">
+              <img src={tigonIcon} alt="TIGON IQ" className="h-8 w-8 object-contain" />
             </div>
             <h1 className="text-3xl font-bold text-foreground">TIGON IQ</h1>
             <p className="text-muted-foreground mt-2">
