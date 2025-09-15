@@ -79,6 +79,11 @@ export const settings = pgTable("settings", {
     webhookUrl: "",
     channel: "",
   }),
+  tigonConfig: jsonb("tigon_config").default({
+    enabled: false,
+    webhookUrl: "",
+    channel: "",
+  }),
   trelloConfig: jsonb("trello_config").default({
     enabled: false,
     apiKey: "",

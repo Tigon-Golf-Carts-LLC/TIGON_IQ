@@ -92,6 +92,15 @@ export default function IntegrationsPage() {
     });
   };
 
+  const updateTigonConfig = (updates: any) => {
+    updateSettingsMutation.mutate({
+      tigonConfig: {
+        ...settings?.tigonConfig,
+        ...updates,
+      },
+    });
+  };
+
   const updateTrelloConfig = (updates: any) => {
     updateSettingsMutation.mutate({
       trelloConfig: {
@@ -112,6 +121,7 @@ export default function IntegrationsPage() {
 
   const emailConfig = settings?.emailConfig || {};
   const slackConfig = settings?.slackConfig || {};
+  const tigonConfig = settings?.tigonConfig || {};
   const trelloConfig = settings?.trelloConfig || {};
   const aiConfig = settings?.aiConfig || {};
 
@@ -129,7 +139,7 @@ export default function IntegrationsPage() {
           </div>
 
           {/* Integration Status Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             <Card data-testid="integration-email-status">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -164,6 +174,27 @@ export default function IntegrationsPage() {
                     </div>
                   </div>
                   {slackConfig.enabled ? (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-gray-400" />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card data-testid="integration-tigon-status">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium">TIGON Boards</p>
+                      <p className="text-sm text-muted-foreground">Project Management</p>
+                    </div>
+                  </div>
+                  {tigonConfig.enabled ? (
                     <CheckCircle className="h-5 w-5 text-green-600" />
                   ) : (
                     <XCircle className="h-5 w-5 text-gray-400" />
@@ -217,9 +248,10 @@ export default function IntegrationsPage() {
 
           {/* Integration Configuration */}
           <Tabs defaultValue="email" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4" data-testid="integration-tabs">
+            <TabsList className="grid w-full grid-cols-5" data-testid="integration-tabs">
               <TabsTrigger value="email">Email</TabsTrigger>
               <TabsTrigger value="slack">Slack</TabsTrigger>
+              <TabsTrigger value="tigon">TIGON Boards</TabsTrigger>
               <TabsTrigger value="trello">Trello</TabsTrigger>
               <TabsTrigger value="ai">AI Assistant</TabsTrigger>
             </TabsList>
@@ -369,6 +401,76 @@ export default function IntegrationsPage() {
                       disabled={!slackConfig.enabled || testIntegrationMutation.isPending}
                       variant="outline"
                       data-testid="button-test-slack"
+                    >
+                      Test Integration
+                    </Button>
+                    <Button
+                      onClick={() => window.open('https://api.slack.com/messaging/webhooks', '_blank')}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Setup Guide
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* TIGON Boards Integration */}
+            <TabsContent value="tigon">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <FileText className="h-5 w-5 text-primary mr-2" />
+                    TIGON Boards Integration
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-medium">Enable TIGON Boards Notifications</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Send conversation alerts to TIGON Boards channels
+                      </p>
+                    </div>
+                    <Switch
+                      checked={tigonConfig.enabled || false}
+                      onCheckedChange={(checked) => updateTigonConfig({ enabled: checked })}
+                      data-testid="switch-tigon-enabled"
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="tigonWebhook">Webhook URL</Label>
+                      <Input
+                        id="tigonWebhook"
+                        value={tigonConfig.webhookUrl || ""}
+                        onChange={(e) => updateTigonConfig({ webhookUrl: e.target.value })}
+                        placeholder="https://hooks.slack.com/services/..."
+                        data-testid="input-tigon-webhook"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="tigonChannel">Default Channel</Label>
+                      <Input
+                        id="tigonChannel"
+                        value={tigonConfig.channel || ""}
+                        onChange={(e) => updateTigonConfig({ channel: e.target.value })}
+                        placeholder="#customer-support"
+                        data-testid="input-tigon-channel"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-2">
+                    <Button
+                      onClick={() => testIntegrationMutation.mutate('tigon')}
+                      disabled={!tigonConfig.enabled || testIntegrationMutation.isPending}
+                      variant="outline"
+                      data-testid="button-test-tigon"
                     >
                       Test Integration
                     </Button>
