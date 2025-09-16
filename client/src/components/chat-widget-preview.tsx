@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, X, Send, User, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
+import tigerIcon from "@assets/TIGON BOARDS_1758048495339.png";
 
 interface ChatWidgetPreviewProps {
   config?: {
@@ -85,7 +86,7 @@ export function ChatWidgetPreview({ config = {} }: ChatWidgetPreviewProps) {
               style={{ backgroundColor: primaryColor }}
               data-testid="widget-button"
             >
-              <MessageCircle className="h-6 w-6 text-white" />
+              <img src={tigerIcon} alt="Chat" className="h-6 w-6 brightness-0 invert" />
             </Button>
           )}
           
