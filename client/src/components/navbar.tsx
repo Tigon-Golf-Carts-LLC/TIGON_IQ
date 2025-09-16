@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import defaultAvatar from "@assets/TIGON Chat Bot ICON_1757612559255.png";
+import tigerIcon from "@assets/TIGON BOARDS_1758048495339.png";
 import { Badge } from "@/components/ui/badge";
 import { 
   DropdownMenu,
@@ -25,7 +26,7 @@ export function Navbar() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <MessageCircle className="h-6 w-6 text-primary-foreground" />
+            <img src={tigerIcon} alt="TIGON" className="h-6 w-6 brightness-0 invert" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-foreground" data-testid="app-title">TIGON IQ</h1>
