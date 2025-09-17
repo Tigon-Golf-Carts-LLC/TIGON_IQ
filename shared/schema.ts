@@ -301,7 +301,7 @@ export const uuidParamSchema = z.object({
 });
 
 export const widgetConfigQuerySchema = z.object({
-  domain: z.string().min(1).regex(/^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*$/, "Invalid domain format")
+  domain: z.string().min(1).regex(/^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*(:[\d]+)?$/, "Invalid domain format")
 });
 
 export const publicMessageSchema = z.object({

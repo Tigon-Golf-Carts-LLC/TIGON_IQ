@@ -360,7 +360,7 @@
   function createIcon(type) {
     const icons = {
       chat: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-      tiger: '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C10.9 2 10 2.9 10 4C10 4.7 10.4 5.4 11 5.7V7C11 7.6 11.4 8 12 8S13 7.6 13 7V5.7C13.6 5.4 14 4.7 14 4C14 2.9 13.1 2 12 2ZM7.5 6C6.7 6 6 6.7 6 7.5S6.7 9 7.5 9S9 8.3 9 7.5S8.3 6 7.5 6ZM16.5 6C15.7 6 15 6.7 15 7.5S15.7 9 16.5 9S18 8.3 18 7.5S17.3 6 16.5 6ZM12 9C8.7 9 6 11.7 6 15V18C6 19.1 6.9 20 8 20H16C17.1 20 18 19.1 18 18V15C18 11.7 15.3 9 12 9ZM10 13C10.6 13 11 13.4 11 14S10.6 15 10 15S9 14.6 9 14S9.4 13 10 13ZM14 13C14.6 13 15 13.4 15 14S14.6 15 14 15S13 14.6 13 14S13.4 13 14 13ZM12 16.5C11.2 16.5 10.5 16.1 10.1 15.4L10.9 14.9C11.1 15.3 11.5 15.5 12 15.5S12.9 15.3 13.1 14.9L13.9 15.4C13.5 16.1 12.8 16.5 12 16.5Z"/><path d="M4 10L3 11L4.5 12.5L3 14L4 15L6 13L4 10ZM20 10L18 13L20 15L21 14L19.5 12.5L21 11L20 10Z"/></svg>',
+      tiger: '<svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2C10.9 2 10 2.9 10 4C10 4.7 10.4 5.4 11 5.7V7C11 7.6 11.4 8 12 8S13 7.6 13 7V5.7C13.6 5.4 14 4.7 14 4C14 2.9 13.1 2 12 2ZM7.5 6C6.7 6 6 6.7 6 7.5S6.7 9 7.5 9S9 8.3 9 7.5S8.3 6 7.5 6ZM16.5 6C15.7 6 15 6.7 15 7.5S15.7 9 16.5 9S18 8.3 18 7.5S17.3 6 16.5 6ZM12 9C8.7 9 6 11.7 6 15V18C6 19.1 6.9 20 8 20H16C17.1 20 18 19.1 18 18V15C18 11.7 15.3 9 12 9ZM10 13C10.6 13 11 13.4 11 14S10.6 15 10 15S9 14.6 9 14S9.4 13 10 13ZM14 13C14.6 13 15 13.4 15 14S14.6 15 14 15S13 14.6 13 14S13.4 13 14 13ZM12 16.5C11.2 16.5 10.5 16.1 10.1 15.4L10.9 14.9C11.1 15.3 11.5 15.5 12 15.5S12.9 15.3 13.1 14.9L13.9 15.4C13.5 16.1 12.8 16.5 12 16.5Z"/><path d="M4 10L3 11L4.5 12.5L3 14L4 15L6 13L4 10ZM20 10L18 13L20 15L21 14L19.5 12.5L21 11L20 10Z"/></svg>',
       close: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>',
       send: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>',
       user: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>',
@@ -472,6 +472,16 @@
   async function sendMessage() {
     const content = messageInput.trim();
     if (!content || !conversationId) return;
+    
+    // Add message to UI immediately for better UX
+    const customerMessage = {
+      id: Date.now().toString(),
+      content: content,
+      senderType: 'customer',
+      createdAt: new Date().toISOString(),
+    };
+    messages.push(customerMessage);
+    renderMessages();
 
     const messageData = {
       type: 'send_message',
@@ -506,6 +516,12 @@
     // Clear input
     messageInput = '';
     updateInput();
+    
+    // Scroll to bottom after adding message
+    const messagesContainer = document.getElementById('chatbot-messages');
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
   }
 
   // Format time
