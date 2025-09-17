@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Navbar } from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +24,16 @@ import { ConversationListItem, ConversationDetails } from "@shared/schema";
 export default function ConversationsPage() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
+  const [location] = useLocation();
+
+  // Check for selected conversation from query parameter
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const selectedId = params.get('selected');
+    if (selectedId) {
+      setSelectedConversation(selectedId);
+    }
+  }, [location]);
 
   const { data: conversations } = useQuery<ConversationListItem[]>({
     queryKey: ["/api/conversations"],

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Navbar } from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +15,8 @@ import {
   Mail,
   Slack,
   FileText,
-  Table
+  Table,
+  ArrowRight
 } from "lucide-react";
 
 import { StatsResponse, ConversationListItem, User, Settings } from "@shared/schema";
@@ -128,34 +130,41 @@ export default function DashboardPage() {
               {/* Recent Conversations */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <MessageCircle className="h-5 w-5 text-primary mr-2" />
-                    Recent Conversations
-                  </CardTitle>
+                  <Link href="/conversations">
+                    <CardTitle className="flex items-center justify-between cursor-pointer hover:text-primary transition-colors group" data-testid="link-recent-conversations">
+                      <div className="flex items-center">
+                        <MessageCircle className="h-5 w-5 text-primary mr-2" />
+                        Recent Conversations
+                      </div>
+                      <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </CardTitle>
+                  </Link>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3" data-testid="recent-conversations">
                     {conversations?.slice(0, 5).map((conv) => (
-                      <div key={conv.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                            <span className="text-xs font-medium text-primary">
-                              {conv.customerEmail?.[0]?.toUpperCase() || 'A'}
-                            </span>
+                      <Link key={conv.id} href={`/conversations?selected=${conv.id}`}>
+                        <div className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-accent transition-colors" data-testid={`conversation-item-${conv.id}`}>
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                              <span className="text-xs font-medium text-primary">
+                                {conv.customerEmail?.[0]?.toUpperCase() || 'A'}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium" data-testid={`conversation-customer-${conv.id}`}>
+                                {conv.customerEmail || 'Anonymous'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {conv.website?.domain || 'Unknown website'}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium" data-testid={`conversation-customer-${conv.id}`}>
-                              {conv.customerEmail || 'Anonymous'}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {conv.website?.domain || 'Unknown website'}
-                            </p>
-                          </div>
+                          <Badge variant={conv.status === 'active' ? 'default' : 'secondary'}>
+                            {conv.status}
+                          </Badge>
                         </div>
-                        <Badge variant={conv.status === 'active' ? 'default' : 'secondary'}>
-                          {conv.status}
-                        </Badge>
-                      </div>
+                      </Link>
                     )) || (
                       <p className="text-muted-foreground text-center py-8">No conversations yet</p>
                     )}
