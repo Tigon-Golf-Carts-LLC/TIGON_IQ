@@ -413,7 +413,7 @@
       messages.push({
         id: 'welcome',
         content: widgetConfig.welcomeMessage || 'Hi! How can we help you today?',
-        senderType: 'ai',
+        senderType: 'bot',
         createdAt: new Date().toISOString(),
       });
       
@@ -516,12 +516,22 @@
     });
   }
 
+  // Function to sanitize color values to prevent XSS
+  function sanitizeColor(color) {
+    if (!color) return '#af1f31';
+    
+    // Allow only safe color formats: hex, rgb, rgba, hsl, hsla
+    const safeColorRegex = /^(#[0-9a-fA-F]{3,8}|rgb\(\d{1,3},\s*\d{1,3},\s*\d{1,3}\)|rgba\(\d{1,3},\s*\d{1,3},\s*\d{1,3},\s*[0-1]?(\.\d+)?\)|hsl\(\d{1,3},\s*\d{1,3}%,\s*\d{1,3}%\)|hsla\(\d{1,3},\s*\d{1,3}%,\s*\d{1,3}%,\s*[0-1]?(\.\d+)?\))$/;
+    
+    return safeColorRegex.test(color.trim()) ? color.trim() : '#af1f31';
+  }
+
   // Render functions
   function renderWidget() {
     const container = document.getElementById(WIDGET_ID);
     if (!container) return;
 
-    const primaryColor = widgetConfig.primaryColor || '#af1f31';
+    const primaryColor = sanitizeColor(widgetConfig.primaryColor || '#af1f31');
     const position = widgetConfig.position || 'bottom-right';
 
     container.className = `chatbot-widget-container ${position}`;
@@ -559,13 +569,13 @@
               id="chatbot-input"
               placeholder="Type your message..."
               onkeypress="handleKeyPress(event)"
-              ${!isConnected && conversationId ? 'disabled' : ''}
+              ${!isConnected ? 'disabled' : ''}
             />
             <button 
               class="chatbot-send" 
               style="background-color: ${primaryColor};" 
               onclick="handleSendMessage()"
-              ${!isConnected && conversationId ? 'disabled' : ''}
+              ${!isConnected ? 'disabled' : ''}
             >
               ${createIcon('send')}
             </button>
@@ -582,10 +592,25 @@
     const messagesContainer = document.getElementById('chatbot-messages');
     if (!messagesContainer) return;
 
-    const primaryColor = widgetConfig.primaryColor || '#af1f31';
+    const primaryColor = sanitizeColor(widgetConfig.primaryColor || '#af1f31');
+    
+    // Function to safely escape HTML to prevent XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
     
     messagesContainer.innerHTML = messages.map(message => {
       let icon;
+      
+      // Whitelist and normalize sender types to prevent attribute injection
+      const allowedTypes = ['customer', 'bot', 'representative', 'system', 'ai'];
+      let messageType = allowedTypes.includes(message.senderType) ? message.senderType : 'bot';
+      
+      // Normalize message types for consistent styling
+      if (messageType === 'ai') messageType = 'bot';
+      
       if (message.senderType === 'customer') {
         icon = createIcon('user');
       } else if (message.senderType === 'representative') {
@@ -595,13 +620,13 @@
       }
       
       return `
-        <div class="chatbot-message ${message.senderType}">
+        <div class="chatbot-message ${messageType}">
           <div class="chatbot-message-content" ${message.senderType === 'customer' ? `style="background-color: ${primaryColor};"` : ''}>
             <div class="chatbot-message-meta">
               ${icon}
               <span>${formatTime(message.createdAt)}</span>
             </div>
-            ${message.content}
+            ${escapeHtml(message.content)}
           </div>
         </div>
       `;
