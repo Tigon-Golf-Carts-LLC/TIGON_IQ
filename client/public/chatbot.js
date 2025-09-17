@@ -302,7 +302,7 @@
     if (!conversationId) return;
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const wsUrl = `${protocol}//${API_BASE.replace('https://', '').replace('http://', '')}/ws`;
     
     socket = new WebSocket(wsUrl);
 
