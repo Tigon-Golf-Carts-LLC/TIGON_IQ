@@ -3,7 +3,7 @@
 
   // Configuration
   const WIDGET_ID = 'chatbot-widget';
-  const API_BASE = window.location.origin;
+  const API_BASE = 'https://tigoniq.com';
   let widgetConfig = null;
   let conversationId = null;
   let socket = null;
