@@ -86,7 +86,7 @@
       }
       
       .chatbot-header {
-        padding: 20px;
+        padding: 16px 20px;
         background: #af1f31;
         color: white;
         display: flex;
@@ -94,12 +94,57 @@
         justify-content: space-between;
         position: relative;
         border-radius: 16px 16px 0 0;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
       }
       
       .chatbot-header-content {
         display: flex;
         align-items: center;
         gap: 8px;
+        width: 100%;
+        justify-content: space-between;
+      }
+      
+      .chatbot-header-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .chatbot-header-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      
+      .chatbot-brand-title {
+        font-weight: 600;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      
+      .chatbot-brand-subtitle {
+        font-weight: 500;
+        font-size: 16px;
+        margin: 2px 0;
+      }
+      
+      .chatbot-phone-number {
+        font-size: 12px;
+        opacity: 0.9;
+        font-weight: 400;
+      }
+      
+      .online-indicator {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        display: inline-block;
       }
       
       .chatbot-header-icon {
@@ -184,7 +229,7 @@
         display: flex;
         flex-direction: column;
         gap: 16px;
-        background: #fafafa;
+        background: white;
         scrollbar-width: thin;
         scrollbar-color: #cbd5e1 #f1f5f9;
       }
@@ -233,8 +278,9 @@
       }
       
       .chatbot-message.bot .chatbot-message-content {
-        background: #f1f5f9;
-        color: #334155;
+        background: #f8f9fa;
+        color: #4a5568;
+        border-radius: 12px;
       }
       
       .chatbot-message.system .chatbot-message-content {
@@ -279,11 +325,11 @@
       .chatbot-input {
         flex: 1;
         padding: 12px 16px;
-        border: 1px solid #e5e7eb;
-        border-radius: 24px;
+        border: 2px solid #af1f31;
+        border-radius: 8px;
         font-size: 14px;
         outline: none;
-        background: #f9f9f9;
+        background: white;
         transition: all 0.2s ease;
       }
       
@@ -566,19 +612,24 @@
       container.innerHTML = `
         <div class="chatbot-window chatbot-fade-in">
           <div class="chatbot-header" style="background-color: ${primaryColor};">
-            <button class="mode-toggle ${isLiveMode ? 'live' : ''}" onclick="toggleLiveMode()">
-              ${isLiveMode ? '🟢 LIVE' : '🤖 BOT'}
-            </button>
             <div class="chatbot-header-content">
-              <div class="chatbot-header-icon">
-                ${isLiveMode ? createIcon('representative') : createIcon('tiger')}
-                <div class="live-indicator ${isLiveMode ? 'active' : ''}"></div>
+              <div class="chatbot-header-brand">
+                <div class="chatbot-header-icon">
+                  ${createIcon('tiger')}
+                </div>
+                <div class="chatbot-header-text">
+                  <div class="chatbot-brand-title">
+                    <span class="online-indicator"></span>
+                    TIGON BOT
+                  </div>
+                  <div class="chatbot-brand-subtitle">Customer Support</div>
+                  <div class="chatbot-phone-number">CALL US 1-844-844-6638</div>
+                </div>
               </div>
-              <span style="font-weight: 500; font-size: 14px;">Customer Support</span>
+              <button class="chatbot-close" onclick="closeWidget()">
+                ${createIcon('close')}
+              </button>
             </div>
-            <button class="chatbot-close" onclick="closeWidget()">
-              ${createIcon('close')}
-            </button>
           </div>
           ${!isConnected && conversationId ? '<div class="chatbot-status">Connecting...</div>' : ''}
           <div class="chatbot-messages" id="chatbot-messages"></div>
