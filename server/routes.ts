@@ -151,6 +151,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ws.conversationId = message.conversationId;
       ws.userId = message.userId;
       
+      // Set authentication flags for representatives to enable real-time message sending
+      if (message.userId) {
+        // Verify the user exists and is a representative
+        const user = await storage.getUser(message.userId);
+        if (user && (user.role === 'representative' || user.role === 'admin')) {
+          ws.isAuthenticated = true;
+          ws.userRole = 'representative';
+        }
+      } else {
+        // This is a customer connection
+        ws.isAuthenticated = true;
+        ws.userRole = 'customer';
+      }
+      
       if (!clients.has(message.conversationId)) {
         clients.set(message.conversationId, new Set());
       }
@@ -453,6 +467,159 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error updating conversation:', error);
       res.status(500).json({ message: 'Failed to update conversation' });
+    }
+  });
+
+  // POST /api/conversations/:id/takeover - Allow representatives to take over AI-assisted conversations
+  app.post('/api/conversations/:id/takeover', requireAuth, async (req, res) => {
+    try {
+      const paramValidation = uuidParamSchema.safeParse(req.params);
+      if (!paramValidation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid conversation ID', 
+          details: paramValidation.error.issues 
+        });
+      }
+
+      // Get current user from session
+      const user = req.user;
+      if (!user || user.role !== 'representative') {
+        return res.status(403).json({ message: 'Only representatives can take over conversations' });
+      }
+
+      // Check if conversation exists
+      const conversation = await storage.getConversation(paramValidation.data.id);
+      if (!conversation) {
+        return res.status(404).json({ message: 'Conversation not found' });
+      }
+
+      // Update conversation to assign representative and disable AI assistance
+      const updatedConversation = await storage.updateConversation(req.params.id, {
+        assignedRepresentativeId: user.id,
+        isAiAssisted: false,
+        status: 'active', // Ensure conversation remains active
+      });
+
+      if (!updatedConversation) {
+        return res.status(500).json({ message: 'Failed to update conversation' });
+      }
+
+      // Create a system message to notify about the takeover
+      await storage.createMessage({
+        conversationId: req.params.id,
+        content: `${user.name} has joined the conversation and will be assisting you.`,
+        senderType: 'ai',
+        senderId: null,
+        messageType: 'text',
+        metadata: { systemMessage: true, takeoverBy: user.id },
+      });
+
+      res.json({ 
+        success: true, 
+        conversation: updatedConversation,
+        message: 'Conversation taken over successfully' 
+      });
+    } catch (error) {
+      console.error('Error taking over conversation:', error);
+      res.status(500).json({ message: 'Failed to take over conversation' });
+    }
+  });
+
+  // POST /api/conversations/:id/ai-suggestions - Generate 3 AI-suggested response options
+  app.post('/api/conversations/:id/ai-suggestions', requireAuth, async (req, res) => {
+    try {
+      const paramValidation = uuidParamSchema.safeParse(req.params);
+      if (!paramValidation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid conversation ID', 
+          details: paramValidation.error.issues 
+        });
+      }
+
+      // Get current user from session
+      const user = req.user;
+      if (!user || user.role !== 'representative') {
+        return res.status(403).json({ message: 'Only representatives can access AI suggestions' });
+      }
+
+      // Get conversation details and messages
+      const conversation = await storage.getConversationWithDetails(paramValidation.data.id);
+      if (!conversation) {
+        return res.status(404).json({ message: 'Conversation not found' });
+      }
+
+      const messages = await storage.getConversationMessages(conversation.id);
+      if (messages.length === 0) {
+        return res.status(400).json({ message: 'No messages found in conversation' });
+      }
+
+      // Convert messages to chat history format
+      const chatHistory = messages.slice(-10).map(msg => ({
+        role: msg.senderType === 'customer' ? 'user' as const : 'assistant' as const,
+        content: msg.content,
+      }));
+
+      // Get the latest customer message for context
+      const latestCustomerMessage = messages
+        .filter(msg => msg.senderType === 'customer')
+        .slice(-1)[0];
+
+      if (!latestCustomerMessage) {
+        return res.status(400).json({ message: 'No customer message found to respond to' });
+      }
+
+      // Define 3 different system prompts to generate varied responses
+      const systemPrompts = [
+        {
+          id: 'professional',
+          name: 'Professional & Direct',
+          prompt: 'You are a professional customer service representative. Provide clear, direct, and efficient responses. Focus on solving the customer\'s issue quickly and professionally.'
+        },
+        {
+          id: 'empathetic',
+          name: 'Empathetic & Supportive',
+          prompt: 'You are a caring and empathetic customer service representative. Show understanding and emotional support. Acknowledge the customer\'s feelings and provide reassuring, helpful responses.'
+        },
+        {
+          id: 'detailed',
+          name: 'Detailed & Educational',
+          prompt: 'You are a knowledgeable customer service representative. Provide comprehensive, educational responses with step-by-step guidance. Include helpful context and detailed explanations.'
+        }
+      ];
+
+      // Generate 3 AI suggestions with different approaches
+      const suggestions = await Promise.allSettled(
+        systemPrompts.map(async (promptConfig) => {
+          const response = await generateAIResponse(chatHistory, {
+            systemPrompt: promptConfig.prompt,
+            maxTokens: 300,
+            temperature: 0.8
+          });
+          return {
+            id: promptConfig.id,
+            name: promptConfig.name,
+            content: response
+          };
+        })
+      );
+
+      // Process results and handle any failures
+      const successfulSuggestions = suggestions
+        .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled')
+        .map(result => result.value);
+
+      if (successfulSuggestions.length === 0) {
+        return res.status(500).json({ message: 'Failed to generate AI suggestions' });
+      }
+
+      res.json({
+        suggestions: successfulSuggestions,
+        customerMessage: latestCustomerMessage.content,
+        conversationId: conversation.id
+      });
+    } catch (error) {
+      console.error('Error generating AI suggestions:', error);
+      res.status(500).json({ message: 'Failed to generate AI suggestions' });
     }
   });
 

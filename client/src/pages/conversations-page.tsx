@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
@@ -18,7 +18,9 @@ import {
   Clock,
   User,
   Bot,
-  Send
+  Send,
+  UserCheck,
+  Lightbulb
 } from "lucide-react";
 
 import { ConversationListItem, ConversationDetails } from "@shared/schema";
@@ -29,6 +31,8 @@ export default function ConversationsPage() {
   const [location] = useLocation();
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -49,6 +53,12 @@ export default function ConversationsPage() {
     queryKey: ["/api/conversations", selectedConversation],
     enabled: !!selectedConversation,
   });
+
+  // Manual mode is now derived from server state instead of local state
+  const isManualMode = useMemo(() => 
+    !conversationDetails?.isAiAssisted && conversationDetails?.assignedRepresentativeId === user?.id, 
+    [conversationDetails, user]
+  );
 
   // WebSocket connection effect
   useEffect(() => {
@@ -103,6 +113,14 @@ export default function ConversationsPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversationDetails?.messages]);
 
+  // Auto-load suggestions when manual mode becomes true
+  useEffect(() => {
+    if (isManualMode && selectedConversation) {
+      setLoadingSuggestions(true);
+      getAISuggestionsMutation.mutate();
+    }
+  }, [isManualMode, selectedConversation]);
+
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
@@ -144,11 +162,71 @@ export default function ConversationsPage() {
     },
   });
 
-  const handleSendMessage = () => {
-    const content = messageInput.trim();
-    if (!content) return;
+  // Take over conversation mutation
+  const takeOverMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedConversation) throw new Error("No conversation selected");
+      
+      const res = await apiRequest("POST", `/api/conversations/${selectedConversation}/takeover`, {
+        representativeId: user?.id,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      // Refresh conversation details
+      queryClient.invalidateQueries({
+        queryKey: ["/api/conversations", selectedConversation],
+      });
+      // Invalidate conversations list to update UI badges
+      queryClient.invalidateQueries({
+        queryKey: ["/api/conversations"],
+      });
+      // Call mutation directly to bypass isManualMode guard that sees stale state
+      getAISuggestionsMutation.mutate();
+    },
+  });
+
+  // Get AI suggestions mutation
+  const getAISuggestionsMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedConversation) throw new Error("No conversation selected");
+      
+      const res = await apiRequest("POST", `/api/conversations/${selectedConversation}/ai-suggestions`);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setAiSuggestions(data.suggestions || []);
+      setLoadingSuggestions(false);
+    },
+    onError: () => {
+      setLoadingSuggestions(false);
+    },
+  });
+
+  // Get AI suggestions
+  const getAISuggestions = () => {
+    if (!isManualMode || !selectedConversation) return;
     
-    sendMessageMutation.mutate(content);
+    setLoadingSuggestions(true);
+    getAISuggestionsMutation.mutate();
+  };
+
+  // Handle sending message (either manual or suggested)
+  const handleSendMessage = (content?: string) => {
+    const messageContent = content || messageInput.trim();
+    if (!messageContent) return;
+    
+    sendMessageMutation.mutate(messageContent);
+    
+    // If we sent a suggested response or manual message, get new suggestions
+    if (isManualMode) {
+      setTimeout(getAISuggestions, 1000); // Slight delay to let the message be processed
+    }
+  };
+
+  // Handle take over
+  const handleTakeOver = () => {
+    takeOverMutation.mutate();
   };
 
   const getStatusColor = (status: string) => {
@@ -275,6 +353,30 @@ export default function ConversationsPage() {
                           Assigned to {conversationDetails.representative.name}
                         </Badge>
                       )}
+                      {conversationDetails.isAiAssisted && !isManualMode && (
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                          <Bot className="h-3 w-3 mr-1" />
+                          AI Assisted
+                        </Badge>
+                      )}
+                      {isManualMode && (
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          <UserCheck className="h-3 w-3 mr-1" />
+                          Manual Mode
+                        </Badge>
+                      )}
+                      {conversationDetails.isAiAssisted && !isManualMode && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleTakeOver}
+                          disabled={takeOverMutation.isPending}
+                          data-testid="button-takeover"
+                        >
+                          <UserCheck className="h-4 w-4 mr-1" />
+                          Take Over
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -328,13 +430,62 @@ export default function ConversationsPage() {
                   </div>
                 </ScrollArea>
 
+                {/* AI Suggestions (when in manual mode) */}
+                {isManualMode && (
+                  <div className="p-4 border-t border-border bg-yellow-50 dark:bg-yellow-900/20">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Lightbulb className="h-4 w-4 text-yellow-600" />
+                      <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                        AI Suggested Responses
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={getAISuggestions}
+                        disabled={loadingSuggestions}
+                        className="ml-auto text-xs"
+                      >
+                        Refresh
+                      </Button>
+                    </div>
+                    
+                    {loadingSuggestions ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></div>
+                        Generating suggestions...
+                      </div>
+                    ) : aiSuggestions.length > 0 ? (
+                      <div className="space-y-2">
+                        {aiSuggestions.map((suggestion, index) => (
+                          <Button
+                            key={index}
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-start text-left h-auto p-3 whitespace-normal"
+                            onClick={() => handleSendMessage(suggestion)}
+                            disabled={sendMessageMutation.isPending}
+                            data-testid={`suggestion-${index}`}
+                          >
+                            <span className="text-xs font-medium text-yellow-600 mr-2">{index + 1}.</span>
+                            {suggestion}
+                          </Button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">
+                        No suggestions available. Click refresh to get AI suggestions.
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Message Input */}
                 <div className="p-4 border-t border-border">
                   <div className="flex space-x-2">
                     <Input
                       value={messageInput}
                       onChange={(e) => setMessageInput(e.target.value)}
-                      placeholder="Type your message..."
+                      placeholder={isManualMode ? "Type your manual response or use AI suggestions above..." : "Type your message..."}
                       className="flex-1"
                       data-testid="input-message"
                       onKeyPress={(e) => {
@@ -347,12 +498,17 @@ export default function ConversationsPage() {
                     <Button 
                       size="icon"
                       disabled={!messageInput.trim() || sendMessageMutation.isPending}
-                      onClick={handleSendMessage}
+                      onClick={() => handleSendMessage()}
                       data-testid="button-send-message"
                     >
                       <Send className="h-4 w-4" />
                     </Button>
                   </div>
+                  {isManualMode && (
+                    <div className="text-xs text-muted-foreground mt-2">
+                      Manual mode active - You can type custom responses or use AI suggestions above
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
