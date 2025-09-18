@@ -31,6 +31,7 @@ export default function ConversationsPage() {
   const [location] = useLocation();
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [wsJoined, setWsJoined] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const { user } = useAuth();
@@ -70,6 +71,7 @@ export default function ConversationsPage() {
 
     ws.onopen = () => {
       setIsConnected(true);
+      setWsJoined(false); // Reset joined state
       ws.send(JSON.stringify({
         type: 'join_conversation',
         conversationId: selectedConversation,
@@ -80,7 +82,11 @@ export default function ConversationsPage() {
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       
-      if (data.type === 'new_message') {
+      if (data.type === 'joined') {
+        // Server confirmed we've successfully joined the conversation
+        setWsJoined(true);
+        console.log('WebSocket joined conversation:', data.conversationId);
+      } else if (data.type === 'new_message') {
         // Invalidate queries to refresh conversation details and messages
         queryClient.invalidateQueries({
           queryKey: ["/api/conversations", selectedConversation],
@@ -88,16 +94,22 @@ export default function ConversationsPage() {
       } else if (data.type === 'typing') {
         // Handle typing indicators if needed
         console.log('User typing:', data);
+      } else if (data.type === 'error') {
+        // Handle server-side errors
+        console.error('WebSocket server error:', data.message);
+        setWsJoined(false); // Reset joined state on error
       }
     };
 
     ws.onclose = () => {
       setIsConnected(false);
+      setWsJoined(false);
     };
 
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
       setIsConnected(false);
+      setWsJoined(false);
     };
 
     setSocket(ws);
@@ -134,12 +146,62 @@ export default function ConversationsPage() {
         senderId: user.id,
       };
 
-      // Send via WebSocket if connected
-      if (socket && isConnected) {
-        socket.send(JSON.stringify(messageData));
+      // Try WebSocket first if connected, joined, and authenticated
+      if (socket && isConnected && wsJoined && user) {
+        try {
+          // Send via WebSocket with timeout protection
+          const sendPromise = new Promise<{success: boolean, method: string}>((resolve, reject) => {
+            const messageId = Date.now().toString(); // Simple message ID for tracking
+            
+            // Set up timeout for WebSocket send
+            const timeoutId = setTimeout(() => {
+              reject(new Error('WebSocket send timeout'));
+            }, 5000); // 5 second timeout
+            
+            // Listen for server response or error
+            const responseHandler = (event: MessageEvent) => {
+              const data = JSON.parse(event.data);
+              if (data.type === 'error') {
+                clearTimeout(timeoutId);
+                socket.removeEventListener('message', responseHandler);
+                reject(new Error(data.message || 'WebSocket server error'));
+              } else if (data.type === 'new_message') {
+                // Message was successfully processed
+                clearTimeout(timeoutId);
+                socket.removeEventListener('message', responseHandler);
+                resolve({ success: true, method: 'websocket' });
+              }
+            };
+            
+            socket.addEventListener('message', responseHandler);
+            
+            // Send the message
+            socket.send(JSON.stringify(messageData));
+            
+            // For now, assume success after a short delay since we don't have message IDs
+            // This prevents indefinite waiting while still providing some error detection
+            setTimeout(() => {
+              clearTimeout(timeoutId);
+              socket.removeEventListener('message', responseHandler);
+              resolve({ success: true, method: 'websocket' });
+            }, 1000); // Assume success after 1 second if no error
+          });
+          
+          return await sendPromise;
+        } catch (wsError) {
+          console.warn('WebSocket send failed, falling back to HTTP:', wsError);
+          // Fall through to HTTP fallback
+        }
       }
 
-      // Also send via HTTP as backup
+      // Fallback to HTTP if WebSocket is not available, not joined, or failed
+      console.log('Using HTTP fallback for message send. Socket state:', {
+        hasSocket: !!socket,
+        isConnected,
+        wsJoined,
+        hasUser: !!user
+      });
+      
       const res = await apiRequest("POST", "/api/messages", {
         conversationId: selectedConversation,
         content,
