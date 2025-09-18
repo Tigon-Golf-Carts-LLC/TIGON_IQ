@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Navbar } from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +27,10 @@ export default function ConversationsPage() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
   const [location] = useLocation();
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const { user } = useAuth();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Check for selected conversation from query parameter
   useEffect(() => {
@@ -43,6 +49,107 @@ export default function ConversationsPage() {
     queryKey: ["/api/conversations", selectedConversation],
     enabled: !!selectedConversation,
   });
+
+  // WebSocket connection effect
+  useEffect(() => {
+    if (!selectedConversation || !user) return;
+
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      setIsConnected(true);
+      ws.send(JSON.stringify({
+        type: 'join_conversation',
+        conversationId: selectedConversation,
+        userId: user.id,
+      }));
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      
+      if (data.type === 'new_message') {
+        // Invalidate queries to refresh conversation details and messages
+        queryClient.invalidateQueries({
+          queryKey: ["/api/conversations", selectedConversation],
+        });
+      } else if (data.type === 'typing') {
+        // Handle typing indicators if needed
+        console.log('User typing:', data);
+      }
+    };
+
+    ws.onclose = () => {
+      setIsConnected(false);
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setIsConnected(false);
+    };
+
+    setSocket(ws);
+
+    return () => {
+      ws.close();
+      setSocket(null);
+    };
+  }, [selectedConversation, user]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [conversationDetails?.messages]);
+
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: async (content: string) => {
+      if (!selectedConversation || !user) throw new Error("No conversation or user");
+      
+      const messageData = {
+        type: 'send_message',
+        conversationId: selectedConversation,
+        content,
+        senderType: 'representative',
+        senderId: user.id,
+      };
+
+      // Send via WebSocket if connected
+      if (socket && isConnected) {
+        socket.send(JSON.stringify(messageData));
+      }
+
+      // Also send via HTTP as backup
+      const res = await apiRequest("POST", "/api/messages", {
+        conversationId: selectedConversation,
+        content,
+        senderType: 'representative',
+        senderId: user.id,
+        messageType: 'text',
+      });
+
+      return res.json();
+    },
+    onSuccess: () => {
+      setMessageInput("");
+      // Invalidate queries to refresh conversation details
+      queryClient.invalidateQueries({
+        queryKey: ["/api/conversations", selectedConversation],
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to send message:', error);
+    },
+  });
+
+  const handleSendMessage = () => {
+    const content = messageInput.trim();
+    if (!content) return;
+    
+    sendMessageMutation.mutate(content);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -216,6 +323,8 @@ export default function ConversationsPage() {
                         <p>No messages yet</p>
                       </div>
                     )}
+                    {/* Auto-scroll anchor */}
+                    <div ref={messagesEndRef} />
                   </div>
                 </ScrollArea>
 
@@ -231,14 +340,14 @@ export default function ConversationsPage() {
                       onKeyPress={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
-                          // TODO: Send message
-                          setMessageInput("");
+                          handleSendMessage();
                         }
                       }}
                     />
                     <Button 
                       size="icon"
-                      disabled={!messageInput.trim()}
+                      disabled={!messageInput.trim() || sendMessageMutation.isPending}
+                      onClick={handleSendMessage}
                       data-testid="button-send-message"
                     >
                       <Send className="h-4 w-4" />
