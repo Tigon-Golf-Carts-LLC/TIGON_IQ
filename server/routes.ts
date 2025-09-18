@@ -5,7 +5,7 @@ import WebSocket from "ws";
 import { setupAuth, requireAuth, requireRole } from "./auth";
 import { storage } from "./storage";
 import { generateAIResponse, shouldHandoffToHuman, extractCustomerIntent } from "./services/openai";
-import { sendConversationNotification, sendConversationSummary } from "./services/sendgrid";
+import { internalEmailService } from "./services/internal-email";
 import { z } from "zod";
 import { 
   wsMessageSchema, 
@@ -230,12 +230,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send email notifications if configured
       const settings = await storage.getSettings() as ExtendedSettings | undefined;
       if (settings?.emailConfig?.enabled && senderType === 'customer') {
-        await sendConversationNotification(
-          conversation,
-          newMessage,
-          settings.emailConfig.notificationEmails || [],
-          settings.emailConfig.fromEmail || ''
-        );
+        // Configure internal email service with current settings
+        if (settings.emailConfig.useInternalEmail && settings.emailConfig.smtpHost) {
+          // Inject storage instance into email service for persistence
+          (internalEmailService as any).storage = storage;
+          
+          internalEmailService.configure({
+            enabled: settings.emailConfig.enabled,
+            smtpHost: settings.emailConfig.smtpHost,
+            smtpPort: settings.emailConfig.smtpPort || 587,
+            smtpSecure: settings.emailConfig.smtpSecure || false,
+            smtpUser: settings.emailConfig.smtpUser || '',
+            smtpPassword: settings.emailConfig.smtpPassword || '',
+            fromEmail: settings.emailConfig.fromEmail || '',
+            fromName: settings.emailConfig.fromName || 'TIGON IQ Support',
+            notificationEmails: settings.emailConfig.notificationEmails || [],
+            threadModifier: settings.emailConfig.threadModifier || '#TIQ',
+            subjectPrefix: settings.emailConfig.subjectPrefix || '[TIGON-IQ]',
+            enableThreading: settings.emailConfig.enableThreading !== false
+          });
+
+          // Check if this is a new conversation (first customer message)
+          const conversationMessages = await storage.getConversationMessages(conversation.id);
+          const isNewConversation = conversationMessages.length === 1;
+
+          await internalEmailService.sendConversationNotification(
+            conversation,
+            newMessage,
+            isNewConversation
+          );
+        }
       }
 
     } catch (error) {
@@ -552,6 +576,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/settings', requireAuth, async (req, res) => {
     try {
       const settings = await storage.getSettings();
+      
+      // Redact sensitive information before sending to client
+      if (settings.emailConfig && settings.emailConfig.smtpPassword) {
+        settings.emailConfig = {
+          ...settings.emailConfig,
+          smtpPassword: '[REDACTED]' // Never expose password to frontend
+        };
+      }
+      
       res.json(settings);
     } catch (error) {
       console.error('Error fetching settings:', error);

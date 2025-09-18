@@ -73,6 +73,18 @@ export const settings = pgTable("settings", {
     enabled: false,
     fromEmail: "",
     notificationEmails: [],
+    // Internal SMTP Configuration
+    useInternalEmail: true,
+    smtpHost: "",
+    smtpPort: 587,
+    smtpSecure: false,
+    smtpUser: "",
+    smtpPassword: "",
+    fromName: "TIGON IQ Support",
+    // Threading and Modifiers
+    threadModifier: "#TIQ",
+    subjectPrefix: "[TIGON-IQ]",
+    enableThreading: true,
   }),
   slackConfig: jsonb("slack_config").default({
     enabled: false,
@@ -203,6 +215,18 @@ export type EmailConfig = {
   enabled: boolean;
   fromEmail: string;
   notificationEmails: string[];
+  // Internal SMTP Configuration
+  useInternalEmail: boolean;
+  smtpHost: string;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpUser: string;
+  smtpPassword: string;
+  fromName: string;
+  // Threading and Modifiers
+  threadModifier: string;
+  subjectPrefix: string;
+  enableThreading: boolean;
 };
 
 export type WidgetConfig = {

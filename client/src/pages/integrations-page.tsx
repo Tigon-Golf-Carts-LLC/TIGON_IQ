@@ -262,15 +262,18 @@ export default function IntegrationsPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Mail className="h-5 w-5 text-primary mr-2" />
-                    Email Integration (SendGrid)
+                    Internal Email System
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Configure internal SMTP email system with conversation threading
+                  </p>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <Label className="text-base font-medium">Enable Email Notifications</Label>
                       <p className="text-sm text-muted-foreground">
-                        Send conversation notifications via email
+                        Send conversation notifications via internal email system
                       </p>
                     </div>
                     <Switch
@@ -280,67 +283,199 @@ export default function IntegrationsPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="fromEmail">From Email Address</Label>
-                      <Input
-                        id="fromEmail"
-                        value={emailConfig.fromEmail || ""}
-                        onChange={(e) => updateEmailConfig({ fromEmail: e.target.value })}
-                        placeholder="noreply@yourcompany.com"
-                        data-testid="input-from-email"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="sendgridKey">SendGrid API Key</Label>
-                      <Input
-                        id="sendgridKey"
-                        type="password"
-                        value="••••••••••••••••"
-                        placeholder="SG.xxxxxxxxxxxxxxxx"
-                        disabled
-                        data-testid="input-sendgrid-key"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        API key is configured via environment variables
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-medium">Use Internal Email System</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Enable SMTP-based internal email instead of external services
                       </p>
                     </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="notificationEmails">Notification Recipients</Label>
-                    <Textarea
-                      id="notificationEmails"
-                      value={emailConfig.notificationEmails?.join('\n') || ""}
-                      onChange={(e) => updateEmailConfig({ 
-                        notificationEmails: e.target.value.split('\n').filter(email => email.trim()) 
-                      })}
-                      placeholder="support@yourcompany.com&#10;manager@yourcompany.com"
-                      className="h-24"
-                      data-testid="textarea-notification-emails"
+                    <Switch
+                      checked={Boolean(emailConfig.useInternalEmail)}
+                      onCheckedChange={(checked) => updateEmailConfig({ useInternalEmail: checked })}
+                      data-testid="switch-internal-email"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      One email address per line
-                    </p>
                   </div>
 
-                  <div className="flex space-x-2">
+                  {emailConfig.useInternalEmail && (
+                    <>
+                      {/* SMTP Configuration */}
+                      <div className="border-t pt-6">
+                        <h4 className="text-sm font-medium mb-4 text-primary">SMTP Server Configuration</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="smtpHost">SMTP Host</Label>
+                            <Input
+                              id="smtpHost"
+                              value={emailConfig.smtpHost || ""}
+                              onChange={(e) => updateEmailConfig({ smtpHost: e.target.value })}
+                              placeholder="smtp.gmail.com"
+                              data-testid="input-smtp-host"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="smtpPort">SMTP Port</Label>
+                            <Input
+                              id="smtpPort"
+                              type="number"
+                              value={emailConfig.smtpPort || 587}
+                              onChange={(e) => updateEmailConfig({ smtpPort: parseInt(e.target.value) })}
+                              placeholder="587"
+                              data-testid="input-smtp-port"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="smtpUser">SMTP Username</Label>
+                            <Input
+                              id="smtpUser"
+                              value={emailConfig.smtpUser || ""}
+                              onChange={(e) => updateEmailConfig({ smtpUser: e.target.value })}
+                              placeholder="your-email@domain.com"
+                              data-testid="input-smtp-user"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="smtpPassword">SMTP Password</Label>
+                            <Input
+                              id="smtpPassword"
+                              type="password"
+                              value={emailConfig.smtpPassword || ""}
+                              onChange={(e) => updateEmailConfig({ smtpPassword: e.target.value })}
+                              placeholder="••••••••••••••••"
+                              data-testid="input-smtp-password"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-4">
+                          <div>
+                            <Label className="text-base font-medium">Use SSL/TLS</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Enable secure connection (recommended for port 465)
+                            </p>
+                          </div>
+                          <Switch
+                            checked={emailConfig.smtpSecure || false}
+                            onCheckedChange={(checked) => updateEmailConfig({ smtpSecure: checked })}
+                            data-testid="switch-smtp-secure"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Email Identity */}
+                      <div className="border-t pt-6">
+                        <h4 className="text-sm font-medium mb-4 text-primary">Email Identity & Recipients</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="fromEmail">From Email Address</Label>
+                            <Input
+                              id="fromEmail"
+                              value={emailConfig.fromEmail || ""}
+                              onChange={(e) => updateEmailConfig({ fromEmail: e.target.value })}
+                              placeholder="noreply@yourcompany.com"
+                              data-testid="input-from-email"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="fromName">From Name</Label>
+                            <Input
+                              id="fromName"
+                              value={emailConfig.fromName || "TIGON IQ Support"}
+                              onChange={(e) => updateEmailConfig({ fromName: e.target.value })}
+                              placeholder="TIGON IQ Support"
+                              data-testid="input-from-name"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 mt-4">
+                          <Label htmlFor="notificationEmails">Notification Recipients</Label>
+                          <Textarea
+                            id="notificationEmails"
+                            value={emailConfig.notificationEmails?.join('\n') || ""}
+                            onChange={(e) => updateEmailConfig({ 
+                              notificationEmails: e.target.value.split('\n').filter(email => email.trim()) 
+                            })}
+                            placeholder="support@yourcompany.com&#10;manager@yourcompany.com"
+                            className="h-24"
+                            data-testid="textarea-notification-emails"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            One email address per line
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Threading Configuration */}
+                      <div className="border-t pt-6">
+                        <h4 className="text-sm font-medium mb-4 text-primary">Email Threading & Modifiers</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="subjectPrefix">Subject Prefix</Label>
+                            <Input
+                              id="subjectPrefix"
+                              value={emailConfig.subjectPrefix || "[TIGON-IQ]"}
+                              onChange={(e) => updateEmailConfig({ subjectPrefix: e.target.value })}
+                              placeholder="[TIGON-IQ]"
+                              data-testid="input-subject-prefix"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Prefix added to all email subjects
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="threadModifier">Thread Modifier</Label>
+                            <Input
+                              id="threadModifier"
+                              value={emailConfig.threadModifier || "#TIQ"}
+                              onChange={(e) => updateEmailConfig({ threadModifier: e.target.value })}
+                              placeholder="#TIQ"
+                              data-testid="input-thread-modifier"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Unique identifier for email threads
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-4">
+                          <div>
+                            <Label className="text-base font-medium">Enable Email Threading</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Group conversation messages in the same email thread
+                            </p>
+                          </div>
+                          <Switch
+                            checked={emailConfig.enableThreading !== false}
+                            onCheckedChange={(checked) => updateEmailConfig({ enableThreading: checked })}
+                            data-testid="switch-enable-threading"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="flex space-x-2 pt-6 border-t">
                     <Button
                       onClick={() => testIntegrationMutation.mutate('email')}
                       disabled={!emailConfig.enabled || testIntegrationMutation.isPending}
                       variant="outline"
                       data-testid="button-test-email"
                     >
-                      Test Integration
+                      Test Email Configuration
                     </Button>
                     <Button
-                      onClick={() => window.open('https://sendgrid.com/docs/api-reference/', '_blank')}
+                      onClick={() => window.open('https://nodemailer.com/about/', '_blank')}
                       variant="outline"
                       size="sm"
                     >
                       <ExternalLink className="h-4 w-4 mr-2" />
-                      Documentation
+                      SMTP Documentation
                     </Button>
                   </div>
                 </CardContent>
