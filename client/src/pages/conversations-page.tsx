@@ -224,7 +224,7 @@ export default function ConversationsPage() {
                         </div>
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Updated {formatTime(conv.createdAt)}</span>
+                        <span>Updated {formatTime(conv.createdAt.toString())}</span>
                         {conv.representative === null && (
                           <Badge variant="secondary" className="text-xs">
                             AI Assisted
@@ -309,7 +309,7 @@ export default function ConversationsPage() {
                                message.senderType === 'ai' ? 'AI Assistant' : 'Representative'}
                             </span>
                             <span className="text-xs opacity-75">
-                              {formatTime(message.createdAt)}
+                              {formatTime(message.createdAt.toString())}
                             </span>
                           </div>
                           <p className="text-sm" data-testid={`message-content-${message.id}`}>
