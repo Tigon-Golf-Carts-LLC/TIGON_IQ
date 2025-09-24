@@ -43,33 +43,28 @@
       }
       
       .chatbot-button {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
+        width: 70px;
+        height: 70px;
         border: none;
-        background: #af1f31;
-        box-shadow: 0 4px 16px rgba(175, 31, 49, 0.3);
+        background: transparent;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
         transition: all 0.2s ease;
         position: relative;
-        overflow: hidden;
         flex-shrink: 0;
+        padding: 0;
       }
       
       .chatbot-button img {
-        width: 40px;
-        height: 40px;
+        width: 70px;
+        height: 70px;
         object-fit: contain;
-        filter: brightness(0) invert(1);
       }
       
       .chatbot-button:hover {
-        background: #961b2b;
-        box-shadow: 0 6px 20px rgba(175, 31, 49, 0.4);
-        transform: translateY(-2px);
+        transform: scale(1.05);
       }
       
       .chatbot-button svg {
@@ -430,7 +425,7 @@
   function createIcon(type) {
     const icons = {
       chat: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-      tiger: '<img src="./tigon-logo.png" alt="TIGON Logo" style="width: 40px; height: 40px; object-fit: contain;">',
+      tiger: '<img src="./tigon-chatbot-widget.png" alt="TIGON Chatbot" style="width: 70px; height: 70px; object-fit: contain;">',
       tigerRed: '<svg width="16" height="16" viewBox="0 0 24 24" fill="#af1f31"><path d="M12 2C10.9 2 10 2.9 10 4C10 4.7 10.4 5.4 11 5.7V7C11 7.6 11.4 8 12 8S13 7.6 13 7V5.7C13.6 5.4 14 4.7 14 4C14 2.9 13.1 2 12 2ZM7.5 6C6.7 6 6 6.7 6 7.5S6.7 9 7.5 9S9 8.3 9 7.5S8.3 6 7.5 6ZM16.5 6C15.7 6 15 6.7 15 7.5S15.7 9 16.5 9S18 8.3 18 7.5S17.3 6 16.5 6ZM12 9C8.7 9 6 11.7 6 15V18C6 19.1 6.9 20 8 20H16C17.1 20 18 19.1 18 18V15C18 11.7 15.3 9 12 9ZM10 13C10.6 13 11 13.4 11 14S10.6 15 10 15S9 14.6 9 14S9.4 13 10 13ZM14 13C14.6 13 15 13.4 15 14S14.6 15 14 15S13 14.6 13 14S13.4 13 14 13ZM12 16.5C11.2 16.5 10.5 16.1 10.1 15.4L10.9 14.9C11.1 15.3 11.5 15.5 12 15.5S12.9 15.3 13.1 14.9L13.9 15.4C13.5 16.1 12.8 16.5 12 16.5Z"/><path d="M4 10L3 11L4.5 12.5L3 14L4 15L6 13L4 10ZM20 10L18 13L20 15L21 14L19.5 12.5L21 11L20 10Z"/></svg>',
       close: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>',
       send: '<svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>',
@@ -625,7 +620,7 @@
     
     if (!isOpen) {
       container.innerHTML = `
-        <button class="chatbot-button" style="background-color: ${primaryColor}; border-radius: 50% !important;" onclick="openWidget()">
+        <button class="chatbot-button" onclick="openWidget()">
           ${createIcon('tiger')}
         </button>
       `;
