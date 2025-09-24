@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, X, Send, User, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
-import tigerIcon from "@assets/TIGON BOARDS_1758048495339.png";
+import tigonChatbotWidget from "@assets/tigon-chatbot-widget.png";
 
 interface ChatWidgetPreviewProps {
   config?: {
@@ -82,11 +82,10 @@ export function ChatWidgetPreview({ config = {} }: ChatWidgetPreviewProps) {
           {!isOpen && (
             <Button
               onClick={() => setIsOpen(true)}
-              className="w-14 h-14 rounded-full shadow-lg transition-transform hover:scale-110"
-              style={{ backgroundColor: primaryColor }}
+              className="w-[70px] h-[70px] bg-transparent border-none shadow-none p-0 transition-transform hover:scale-105"
               data-testid="widget-button"
             >
-              <img src={tigerIcon} alt="Chat" className="h-6 w-6 brightness-0 invert" />
+              <img src={tigonChatbotWidget} alt="TIGON Chatbot" className="w-[70px] h-[70px] object-contain" />
             </Button>
           )}
           
