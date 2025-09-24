@@ -25,11 +25,6 @@
         position: fixed;
         z-index: 9999;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        pointer-events: none;
-      }
-      
-      .chatbot-widget-container * {
-        pointer-events: auto;
       }
       
       .chatbot-widget-container.bottom-right {
@@ -59,10 +54,9 @@
         align-items: center;
         justify-content: center;
         transition: all 0.2s ease;
-        position: fixed;
+        position: relative;
         overflow: hidden;
         flex-shrink: 0;
-        z-index: 9999;
       }
       
       .chatbot-button img {
