@@ -45,8 +45,8 @@
       .chatbot-button {
         width: 70px;
         height: 70px;
-        border: none;
-        background: transparent;
+        border: none !important;
+        background: transparent !important;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -54,13 +54,19 @@
         transition: all 0.2s ease;
         position: relative;
         flex-shrink: 0;
-        padding: 0;
+        padding: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
       }
       
       .chatbot-button img {
-        width: 70px;
-        height: 70px;
-        object-fit: contain;
+        width: 70px !important;
+        height: 70px !important;
+        object-fit: contain !important;
+        border: none !important;
+        background: transparent !important;
+        display: block !important;
       }
       
       .chatbot-button:hover {
