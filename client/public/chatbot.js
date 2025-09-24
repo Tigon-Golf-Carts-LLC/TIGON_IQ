@@ -55,6 +55,8 @@
         justify-content: center;
         transition: all 0.2s ease;
         position: relative;
+        overflow: hidden;
+        flex-shrink: 0;
       }
       
       .chatbot-button:hover {
@@ -65,8 +67,9 @@
       
       .chatbot-button svg {
         color: white;
-        width: 24px;
-        height: 24px;
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
       }
       
       .chatbot-window {
@@ -605,7 +608,7 @@
     
     if (!isOpen) {
       container.innerHTML = `
-        <button class="chatbot-button" style="background-color: ${primaryColor};" onclick="openWidget()">
+        <button class="chatbot-button" style="background-color: ${primaryColor}; border-radius: 50% !important;" onclick="openWidget()">
           ${createIcon('tiger')}
         </button>
       `;
