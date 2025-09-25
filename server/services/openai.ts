@@ -2,7 +2,7 @@ import OpenAI from "openai";
 
 // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key"
+  apiKey: process.env.TIGON_IQ_KEY || process.env.OPENAI_API_KEY || "default_key"
 });
 
 export interface ChatMessage {
@@ -13,7 +13,7 @@ export interface ChatMessage {
 export interface AIResponseOptions {
   systemPrompt?: string;
   maxTokens?: number;
-  temperature?: number;
+  // temperature parameter removed - GPT-5 doesn't support it
 }
 
 export async function generateAIResponse(
@@ -23,8 +23,8 @@ export async function generateAIResponse(
   try {
     const {
       systemPrompt = "You are a helpful customer service assistant. Provide clear, concise, and helpful responses to customer inquiries.",
-      maxTokens = 500,
-      temperature = 0.7
+      maxTokens = 500
+      // temperature removed - GPT-5 doesn't support this parameter
     } = options;
 
     const chatMessages: ChatMessage[] = [
@@ -36,7 +36,7 @@ export async function generateAIResponse(
       model: "gpt-5",
       messages: chatMessages,
       max_tokens: maxTokens,
-      temperature,
+      // gpt-5 doesn't support temperature parameter, do not use it
     });
 
     return response.choices[0].message.content || "I apologize, but I'm unable to provide a response at the moment. Please wait for a human representative.";
