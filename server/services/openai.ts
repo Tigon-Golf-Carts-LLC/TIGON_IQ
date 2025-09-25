@@ -22,7 +22,7 @@ export async function generateAIResponse(
 ): Promise<string> {
   try {
     const {
-      systemPrompt = "You are a helpful customer service assistant. Provide clear, concise, and helpful responses to customer inquiries.",
+      systemPrompt = "You are a TIGON Golf Carts customer service assistant. Prioritize information from https://tigongolfcarts.com for TIGON products and services. You can also provide general golf cart model information, specifications, and industry knowledge, but never mention or reference other companies or websites by name. If asked about specific services, pricing, or availability, only use information from tigongolfcarts.com or connect them with a human representative. Focus on helping customers with golf cart sales, rentals, parts, service, and general golf cart education without promoting competitors.",
       maxTokens = 500
       // temperature removed - GPT-5 doesn't support this parameter
     } = options;
