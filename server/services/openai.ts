@@ -13,33 +13,110 @@ export interface ChatMessage {
 export interface AIResponseOptions {
   systemPrompt?: string;
   maxTokens?: number;
+  conversationId?: string; // For OpenAI conversation state management
+  previousResponseId?: string; // For continuing conversations
   // temperature parameter removed - GPT-5 doesn't support it
+}
+
+export interface TigonConversationState {
+  openaiConversationId?: string;
+  lastResponseId?: string;
 }
 
 export async function generateAIResponse(
   messages: ChatMessage[],
   options: AIResponseOptions = {}
-): Promise<string> {
+): Promise<{ content: string; conversationState?: TigonConversationState }> {
   try {
     const {
       systemPrompt = "You are a TIGON Golf Carts customer service assistant. Prioritize information from https://tigongolfcarts.com for TIGON products and services. You can also provide general golf cart model information, specifications, and industry knowledge, but never mention or reference other companies or websites by name. If asked about specific services, pricing, or availability, only use information from tigongolfcarts.com or connect them with a human representative. Focus on helping customers with golf cart sales, rentals, parts, service, and general golf cart education without promoting competitors.",
-      maxTokens = 500
+      maxTokens = 500,
+      conversationId,
+      previousResponseId
       // temperature removed - GPT-5 doesn't support this parameter
     } = options;
 
-    const chatMessages: ChatMessage[] = [
-      { role: 'system', content: systemPrompt },
-      ...messages
-    ];
+    // Use new Responses API for better context management
+    try {
+      // Prepare input items for Responses API
+      const inputItems: any[] = [];
+      
+      // Add system prompt if no previous conversation
+      if (!previousResponseId) {
+        inputItems.push({
+          role: "system",
+          content: [{ type: "input_text", text: systemPrompt }]
+        });
+      }
+      
+      // Add latest user message
+      const latestMessage = messages[messages.length - 1];
+      if (latestMessage) {
+        inputItems.push({
+          role: latestMessage.role === 'user' ? 'user' : 'assistant',
+          content: [{ type: "input_text", text: latestMessage.content }]
+        });
+      }
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-5",
-      messages: chatMessages,
-      max_tokens: maxTokens,
-      // gpt-5 doesn't support temperature parameter, do not use it
-    });
+      const responseParams: any = {
+        model: "gpt-5",
+        input: inputItems,
+        max_output_tokens: maxTokens,
+        store: true, // Enable server-managed conversation state
+      };
 
-    return response.choices[0].message.content || "I apologize, but I'm unable to provide a response at the moment. Please wait for a human representative.";
+      // Continue existing conversation if available
+      if (previousResponseId) {
+        responseParams.previous_response_id = previousResponseId;
+      } else if (conversationId) {
+        responseParams.conversation = conversationId;
+      }
+
+      const response = await openai.responses.create(responseParams);
+
+      // Extract content from Responses API format
+      let content = "I apologize, but I'm unable to provide a response at the moment. Please wait for a human representative.";
+      
+      if (response.output?.[0]) {
+        const outputItem = response.output[0];
+        if ('content' in outputItem && outputItem.content?.[0]) {
+          const contentItem = outputItem.content[0];
+          if ('text' in contentItem) {
+            content = contentItem.text;
+          }
+        }
+      }
+
+      return {
+        content,
+        conversationState: {
+          openaiConversationId: response.conversation?.id,
+          lastResponseId: response.id
+        }
+      };
+
+    } catch (responsesApiError) {
+      console.log('Responses API failed, falling back to Chat Completions:', responsesApiError);
+      
+      // Fallback to traditional Chat Completions API
+      const chatMessages: ChatMessage[] = [
+        { role: 'system', content: systemPrompt },
+        ...messages
+      ];
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-5",
+        messages: chatMessages,
+        max_tokens: maxTokens,
+        // gpt-5 doesn't support temperature parameter, do not use it
+      });
+
+      const content = response.choices[0].message.content || 
+        "I apologize, but I'm unable to provide a response at the moment. Please wait for a human representative.";
+
+      return { content };
+    }
+
   } catch (error) {
     console.error('OpenAI API error:', error);
     throw new Error("Failed to generate AI response: " + (error as Error).message);

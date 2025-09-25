@@ -322,21 +322,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      // Generate AI response
+      // Generate AI response with conversation state management
       const aiResponse = await generateAIResponse(chatHistory, {
         systemPrompt: settings.aiConfig?.systemPrompt || 'You are a helpful customer service assistant.',
         maxTokens: settings.aiConfig?.maxTokens || 500,
+        conversationId: conversation.metadata?.openaiConversationId,
+        previousResponseId: conversation.metadata?.lastResponseId,
       });
 
       // Save AI response
       const aiMessage = await storage.createMessage({
         conversationId: conversation.id,
-        content: aiResponse,
+        content: aiResponse.content,
         senderType: 'ai',
         senderId: null,
         messageType: 'text',
-        metadata: {},
+        metadata: aiResponse.conversationState || {},
       });
+
+      // Update conversation with OpenAI conversation state if available
+      if (aiResponse.conversationState) {
+        await storage.updateConversation(conversation.id, {
+          metadata: {
+            ...conversation.metadata,
+            ...aiResponse.conversationState
+          }
+        });
+      }
 
       // Broadcast AI response
       broadcastToConversation(conversation.id, {
@@ -593,12 +605,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const response = await generateAIResponse(chatHistory, {
             systemPrompt: promptConfig.prompt,
             maxTokens: 300,
-            temperature: 0.8
           });
           return {
             id: promptConfig.id,
             name: promptConfig.name,
-            content: response
+            content: response.content
           };
         })
       );
