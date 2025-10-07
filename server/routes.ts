@@ -646,6 +646,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const message = await storage.createMessage(validationResult.data);
+      
+      // Broadcast the message to conversation participants
+      broadcastToConversation(validationResult.data.conversationId, {
+        type: 'new_message',
+        message,
+      });
+      
+      // Handle AI response for customer messages
+      if (message.senderType === 'customer') {
+        const conversation = await storage.getConversation(validationResult.data.conversationId);
+        if (conversation && conversation.isAiAssisted) {
+          // Trigger AI response asynchronously (don't wait)
+          handleAIResponse(conversation, message).catch(error => {
+            console.error('Error generating AI response:', error);
+          });
+        }
+      }
+      
       res.status(201).json(message);
     } catch (error) {
       console.error('Error creating message:', error);
