@@ -74,7 +74,7 @@ All EPIC carts are ideal for residential neighborhoods, gated communities, resor
 The tone remains professional, friendly, and informative. When needed, TIGON IQ encourages users to call for custom rental quotes or detailed questions using the line: "Give us a call at 1-844-844-6638 and we'll get you rolling!"
 
 Clarification questions are encouraged when needed. Speculation is discouraged; transparency and accuracy are priorities.`,
-      maxTokens = 500,
+      maxTokens = 2000,
       conversationId,
       previousResponseId
       // temperature removed - GPT-5 doesn't support this parameter
@@ -121,11 +121,15 @@ Clarification questions are encouraged when needed. Speculation is discouraged; 
       // Extract content from Responses API format
       let content = "I apologize, but I'm unable to provide a response at the moment. Please wait for a human representative.";
       
-      if (response.output?.[0]) {
-        const outputItem = response.output[0];
-        if ('content' in outputItem && outputItem.content?.[0]) {
-          const contentItem = outputItem.content[0];
-          if ('text' in contentItem) {
+      // Option 1: Use output_text if available (GPT-5 provides this)
+      if (response.output_text) {
+        content = response.output_text;
+      } else if (response.output && Array.isArray(response.output)) {
+        // Option 2: Find the message in the output array
+        const messageOutput = response.output.find((item: any) => item.type === 'message');
+        if (messageOutput && messageOutput.content?.[0]) {
+          const contentItem = messageOutput.content[0];
+          if (contentItem.text) {
             content = contentItem.text;
           }
         }
@@ -134,35 +138,50 @@ Clarification questions are encouraged when needed. Speculation is discouraged; 
       return {
         content,
         conversationState: {
-          openaiConversationId: response.conversation?.id,
+          openaiConversationId: response.conversation?.id || conversationId,
           lastResponseId: response.id
         }
       };
 
-    } catch (responsesApiError) {
-      console.log('Responses API failed, falling back to Chat Completions:', responsesApiError);
+    } catch (responsesApiError: any) {
+      console.error('========================================');
+      console.error('Responses API failed, details:');
+      console.error('Error message:', responsesApiError?.message);
+      console.error('Error code:', responsesApiError?.code);
+      console.error('Error type:', responsesApiError?.type);
+      console.error('Full error:', JSON.stringify(responsesApiError, null, 2));
+      console.error('========================================');
       
       // Fallback to traditional Chat Completions API
-      const chatMessages: ChatMessage[] = [
-        { role: 'system', content: systemPrompt },
-        ...messages
-      ];
+      try {
+        const chatMessages: ChatMessage[] = [
+          { role: 'system', content: systemPrompt },
+          ...messages
+        ];
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-5",
-        messages: chatMessages,
-        max_tokens: maxTokens,
-        // gpt-5 doesn't support temperature parameter, do not use it
-      });
+        const response = await openai.chat.completions.create({
+          model: "gpt-5",
+          messages: chatMessages,
+          max_tokens: maxTokens,
+          // gpt-5 doesn't support temperature parameter, do not use it
+        });
 
-      const content = response.choices[0].message.content || 
-        "I apologize, but I'm unable to provide a response at the moment. Please wait for a human representative.";
+        const content = response.choices[0].message.content || 
+          "I apologize, but I'm unable to provide a response at the moment. Please wait for a human representative.";
 
-      return { content };
+        return { content };
+      } catch (chatError: any) {
+        console.error('Chat Completions API also failed:', chatError?.message);
+        throw chatError;
+      }
     }
 
-  } catch (error) {
-    console.error('OpenAI API error:', error);
+  } catch (error: any) {
+    console.error('========================================');
+    console.error('FINAL OpenAI API error:');
+    console.error('Error message:', error?.message);
+    console.error('Error stack:', error?.stack);
+    console.error('========================================');
     throw new Error("Failed to generate AI response: " + (error as Error).message);
   }
 }
