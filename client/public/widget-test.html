@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TIGON IQ Chatbot Test - tigongolfcarts.com</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #af1f31;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 18px;
+    }
+    .instructions {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      border-left: 4px solid #af1f31;
+    }
+    .instructions h2 {
+      margin-top: 0;
+      color: #af1f31;
+      font-size: 20px;
+    }
+    .instructions ol {
+      margin: 15px 0;
+      padding-left: 25px;
+    }
+    .instructions li {
+      margin: 10px 0;
+      line-height: 1.6;
+    }
+    .alert {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+    }
+    .code {
+      background: #2d3436;
+      color: #00ff00;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      margin: 15px 0;
+    }
+    .note {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      color: #856404;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+    }
+  </style>
+  <script>
+    // Override the domain for testing purposes
+    // This simulates the widget being loaded on tigongolfcarts.com
+    Object.defineProperty(window.location, 'hostname', {
+      writable: true,
+      value: 'tigongolfcarts.com'
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>🐯 TIGON IQ Chatbot Test Page</h1>
+    <p class="subtitle">Real AI-powered customer service chatbot demonstration</p>
+
+    <div class="alert">
+      <strong>✅ Chatbot Status:</strong> The TIGON IQ chatbot widget should appear in the bottom-right corner of this page. This is the <strong>real AI chatbot</strong> with your custom TIGON instructions!
+    </div>
+
+    <div class="instructions">
+      <h2>🎯 How to Test the AI</h2>
+      <ol>
+        <li><strong>Click the chatbot icon</strong> in the bottom-right corner (tiger logo)</li>
+        <li><strong>Ask TIGON-specific questions</strong>, for example:
+          <ul>
+            <li>"Tell me about the EPIC E60L golf cart"</li>
+            <li>"What EPIC models do you have?"</li>
+            <li>"What's the warranty on EPIC carts?"</li>
+            <li>"Do you have 6-seater golf carts?"</li>
+          </ul>
+        </li>
+        <li><strong>Watch the AI respond</strong> with TIGON-specific product information and the signature call-to-action: "Give us a call at 1-844-844-6638 and we'll get you rolling!"</li>
+      </ol>
+    </div>
+
+    <div class="note">
+      <strong>📝 Note:</strong> This test page simulates the widget being loaded on <code>tigongolfcarts.com</code>. The widget connects to your Replit server and uses the OpenAI API (gpt-4o-mini) with your custom TIGON instructions.
+    </div>
+
+    <div class="instructions">
+      <h2>🌐 How to Add This to Your Real Website</h2>
+      <p>To add this chatbot to tigongolfcarts.com, simply add this script tag before the closing <code>&lt;/body&gt;</code> tag:</p>
+      <div class="code">
+&lt;!-- TIGON IQ Chatbot Widget --&gt;<br>
+&lt;script src="https://4ce8c6bf-6e2f-4699-943e-49ea1c8a63c5-00-307cdoontrs69.riker.replit.dev/chatbot.js"&gt;&lt;/script&gt;
+      </div>
+      <p>That's it! The chatbot will automatically appear on your website and connect to the AI service.</p>
+    </div>
+  </div>
+
+  <!-- Load the actual chatbot widget -->
+  <script src="/chatbot.js"></script>
+</body>
+</html>
