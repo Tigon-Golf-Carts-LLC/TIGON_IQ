@@ -37,9 +37,10 @@ Preferred communication style: Simple, everyday language.
 - **Settings**: Global configuration for AI, email, and integration settings
 
 ## AI Integration
-- **Provider**: OpenAI API integration using GPT-5 model
-- **Features**: Automated response generation, handoff decision making, and customer intent extraction
-- **Configuration**: Customizable system prompts, temperature, and token limits
+- **Provider**: OpenAI API integration using gpt-4o-mini model
+- **API Key**: OPENAI_API_TIGON_IQ_KEY environment variable
+- **Features**: Automated response generation with TIGON-specific product knowledge, handoff decision making, and customer intent extraction
+- **Configuration**: Custom TIGON instructions stored in database, temperature (0.7), and max tokens (2000)
 
 ## Real-time Features
 - **WebSocket Management**: Per-conversation client tracking with authentication
@@ -48,10 +49,12 @@ Preferred communication style: Simple, everyday language.
 - **Connection State**: Automatic reconnection and heartbeat monitoring
 
 ## Embeddable Widget
-- **Deployment**: Standalone JavaScript widget for easy website integration
+- **Deployment**: Standalone JavaScript widget hosted at https://tigoniq.com/chatbot.js
+- **Installation**: Add `<script src="https://tigoniq.com/chatbot.js"></script>` before closing `</body>` tag
 - **Customization**: Configurable colors, positioning, and welcome messages
 - **Responsive Design**: Mobile and desktop optimized with smooth animations
-- **API Communication**: Direct integration with main application backend
+- **API Communication**: Direct integration with main application backend via https://tigoniq.com
+- **Domain Detection**: Automatically detects website domain and loads appropriate configuration from database
 
 # External Dependencies
 
@@ -60,7 +63,7 @@ Preferred communication style: Simple, everyday language.
 - **Session Storage**: PostgreSQL-backed session management via connect-pg-simple
 
 ## AI Services
-- **OpenAI**: GPT-5 integration for automated customer service responses and conversation analysis
+- **OpenAI**: gpt-4o-mini integration for automated customer service responses and conversation analysis
 
 ## Email Services
 - **SendGrid**: Transactional email delivery for conversation notifications and summaries

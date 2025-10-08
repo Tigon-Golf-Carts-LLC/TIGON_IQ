@@ -5,7 +5,7 @@
   const WIDGET_ID = 'chatbot-widget';
   const API_BASE = window.location.hostname === 'localhost' || window.location.hostname.includes('replit.dev') 
     ? `${window.location.protocol}//${window.location.host}`
-    : 'https://4ce8c6bf-6e2f-4699-943e-49ea1c8a63c5-00-307cdoontrs69.riker.replit.dev';
+    : 'https://tigoniq.com';
   let widgetConfig = null;
   let conversationId = null;
   let socket = null;
