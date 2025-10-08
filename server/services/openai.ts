@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
 const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_TIGON_IQ_KEY || process.env.OPENAI_API_KEY
 });
 
 export interface ChatMessage {
