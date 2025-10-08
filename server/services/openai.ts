@@ -1,8 +1,7 @@
 import OpenAI from "openai";
 
-// the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
-  apiKey: process.env.TIGON_IQ_KEY || process.env.OPENAI_API_KEY || "default_key"
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 export interface ChatMessage {
@@ -13,20 +12,13 @@ export interface ChatMessage {
 export interface AIResponseOptions {
   systemPrompt?: string;
   maxTokens?: number;
-  conversationId?: string; // For OpenAI conversation state management
-  previousResponseId?: string; // For continuing conversations
-  // temperature parameter removed - GPT-5 doesn't support it
-}
-
-export interface TigonConversationState {
-  openaiConversationId?: string;
-  lastResponseId?: string;
+  temperature?: number;
 }
 
 export async function generateAIResponse(
   messages: ChatMessage[],
   options: AIResponseOptions = {}
-): Promise<{ content: string; conversationState?: TigonConversationState }> {
+): Promise<{ content: string }> {
   try {
     const {
       systemPrompt = `This GPT serves as a custom chatbot for the TIGON Golf Carts website (https://tigongolfcarts.com). Its primary function is to provide information directly sourced from the TIGON website about the company's products, services, and brand-specific content. When site-specific content is unavailable, the bot draws from its general knowledge base to answer questions related to golf carts, low-speed vehicles (LSVs), neighborhood electric vehicles (NEVs), utility task vehicles (UTVs), and related topics.
@@ -75,113 +67,28 @@ The tone remains professional, friendly, and informative. When needed, TIGON IQ 
 
 Clarification questions are encouraged when needed. Speculation is discouraged; transparency and accuracy are priorities.`,
       maxTokens = 2000,
-      conversationId,
-      previousResponseId
-      // temperature removed - GPT-5 doesn't support this parameter
+      temperature = 0.7
     } = options;
 
-    // Use new Responses API for better context management
-    try {
-      // Prepare input items for Responses API
-      const inputItems: any[] = [];
-      
-      // Add system prompt if no previous conversation
-      if (!previousResponseId) {
-        inputItems.push({
-          role: "system",
-          content: [{ type: "input_text", text: systemPrompt }]
-        });
-      }
-      
-      // Add latest user message
-      const latestMessage = messages[messages.length - 1];
-      if (latestMessage) {
-        inputItems.push({
-          role: latestMessage.role === 'user' ? 'user' : 'assistant',
-          content: [{ type: "input_text", text: latestMessage.content }]
-        });
-      }
+    const chatMessages: ChatMessage[] = [
+      { role: 'system', content: systemPrompt },
+      ...messages
+    ];
 
-      const responseParams: any = {
-        model: "gpt-5",
-        input: inputItems,
-        max_output_tokens: maxTokens,
-        store: true, // Enable server-managed conversation state
-      };
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: chatMessages,
+      max_tokens: maxTokens,
+      temperature: temperature,
+    });
 
-      // Continue existing conversation if available
-      if (previousResponseId) {
-        responseParams.previous_response_id = previousResponseId;
-      } else if (conversationId) {
-        responseParams.conversation = conversationId;
-      }
+    const content = response.choices[0].message.content || 
+      "I apologize, but I'm unable to provide a response at the moment. Please wait for a human representative.";
 
-      const response = await openai.responses.create(responseParams);
-
-      // Extract content from Responses API format
-      let content = "I apologize, but I'm unable to provide a response at the moment. Please wait for a human representative.";
-      
-      // Option 1: Use output_text if available (GPT-5 provides this)
-      if (response.output_text) {
-        content = response.output_text;
-      } else if (response.output && Array.isArray(response.output)) {
-        // Option 2: Find the message in the output array
-        const messageOutput = response.output.find((item: any) => item.type === 'message');
-        if (messageOutput && messageOutput.content?.[0]) {
-          const contentItem = messageOutput.content[0];
-          if (contentItem.text) {
-            content = contentItem.text;
-          }
-        }
-      }
-
-      return {
-        content,
-        conversationState: {
-          openaiConversationId: response.conversation?.id || conversationId,
-          lastResponseId: response.id
-        }
-      };
-
-    } catch (responsesApiError: any) {
-      console.error('========================================');
-      console.error('Responses API failed, details:');
-      console.error('Error message:', responsesApiError?.message);
-      console.error('Error code:', responsesApiError?.code);
-      console.error('Error type:', responsesApiError?.type);
-      console.error('Full error:', JSON.stringify(responsesApiError, null, 2));
-      console.error('========================================');
-      
-      // Fallback to traditional Chat Completions API
-      try {
-        const chatMessages: ChatMessage[] = [
-          { role: 'system', content: systemPrompt },
-          ...messages
-        ];
-
-        const response = await openai.chat.completions.create({
-          model: "gpt-5",
-          messages: chatMessages,
-          max_tokens: maxTokens,
-          // gpt-5 doesn't support temperature parameter, do not use it
-        });
-
-        const content = response.choices[0].message.content || 
-          "I apologize, but I'm unable to provide a response at the moment. Please wait for a human representative.";
-
-        return { content };
-      } catch (chatError: any) {
-        console.error('Chat Completions API also failed:', chatError?.message);
-        throw chatError;
-      }
-    }
+    return { content };
 
   } catch (error: any) {
-    console.error('========================================');
-    console.error('FINAL OpenAI API error:');
-    console.error('Error message:', error?.message);
-    console.error('Error stack:', error?.stack);
-    console.error('========================================');
+    console.error('OpenAI API error:', error?.message);
     throw new Error("Failed to generate AI response: " + (error as Error).message);
   }
 }
@@ -192,7 +99,7 @@ export async function shouldHandoffToHuman(
 ): Promise<{ shouldHandoff: boolean; reason?: string }> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
@@ -216,7 +123,6 @@ export async function shouldHandoffToHuman(
     };
   } catch (error) {
     console.error('Error determining handoff:', error);
-    // Default to not handing off on error
     return { shouldHandoff: false };
   }
 }
@@ -228,7 +134,7 @@ export async function extractCustomerIntent(messageContent: string): Promise<{
 }> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",

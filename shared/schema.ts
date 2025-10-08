@@ -64,10 +64,11 @@ export const settings = pgTable("settings", {
   }),
   aiConfig: jsonb("ai_config").notNull().default({
     enabled: true,
-    model: "gpt-5",
+    model: "gpt-4o-mini",
     systemPrompt: "You are a TIGON Golf Carts customer service assistant. Prioritize information from https://tigongolfcarts.com for TIGON products and services. You can also provide general golf cart model information, specifications, and industry knowledge, but never mention or reference other companies or websites by name. If asked about specific services, pricing, or availability, only use information from tigongolfcarts.com or connect them with a human representative. Focus on helping customers with golf cart sales, rentals, parts, service, and general golf cart education without promoting competitors.",
     autoHandoff: true,
-    maxTokens: 500,
+    maxTokens: 2000,
+    temperature: 0.7,
   }),
   emailConfig: jsonb("email_config").default({
     enabled: false,
@@ -209,6 +210,7 @@ export type AIConfig = {
   systemPrompt: string;
   autoHandoff: boolean;
   maxTokens: number;
+  temperature: number;
 };
 
 export type EmailConfig = {

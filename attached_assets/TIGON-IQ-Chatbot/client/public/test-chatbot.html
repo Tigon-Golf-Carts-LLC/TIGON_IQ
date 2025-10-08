@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Test - TIGON Golf Carts</title>
+</head>
+<body>
+    <h1>TIGON Golf Carts - Chatbot Test</h1>
+    <p>This is a test page to verify the chatbot is working.</p>
+    <p>The chatbot should appear in the bottom-right corner.</p>
+    
+    <script>
+        // Add some debugging
+        console.log('Test page loaded');
+        console.log('Domain:', window.location.hostname);
+    </script>
+    
+    <!-- Chatbot Script -->
+    <script src="/chatbot.js"></script>
+    
+    <script>
+        // Debug chatbot loading
+        setTimeout(function() {
+            console.log('Checking for chatbot after 3 seconds...');
+            const chatbot = document.getElementById('chatbot-widget');
+            if (chatbot) {
+                console.log('✅ Chatbot found!', chatbot);
+            } else {
+                console.log('❌ Chatbot not found');
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
