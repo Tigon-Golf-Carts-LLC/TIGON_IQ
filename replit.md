@@ -136,3 +136,94 @@ The system includes a production-to-development database synchronization feature
 - Only authenticated admin/representative users can trigger sync
 - Passwords are synced as-is (hashed) from production
 - Sensitive data (API keys, secrets) included in settings sync
+
+# Avatar Upload System
+
+## Overview
+The system provides comprehensive avatar/icon customization for both the chatbot widget and user representatives. Administrators can upload custom branding images that appear throughout the platform and on customer-facing chat widgets.
+
+## Implementation Details
+
+### ImageUpload Component (`client/src/components/image-upload.tsx`)
+- **Reusable Component**: Handles all avatar/icon uploads with consistent UX
+- **File Support**: PNG, JPG, GIF formats up to 2MB file size
+- **Base64 Storage**: Converts uploaded images to base64 data URLs for database storage
+- **Preview System**: Real-time preview using shadcn/ui Avatar component
+- **Validation**: Client-side file type and size validation with toast notifications
+- **Controlled Updates**: useEffect syncs preview with prop changes for async data loading
+
+### Chatbot Widget Icon
+- **Location**: Widget Settings page → Widget Appearance section
+- **Storage**: `settings.widgetConfig.avatarUrl` (JSON field)
+- **API**: Updates via widget settings endpoint
+- **Display**: Shows in chatbot widget bubble on customer-facing websites
+- **Fallback**: TIGON default icon if no custom icon uploaded
+- **Test ID**: `chatbot-avatar-upload` (button), `chatbot-avatar-input` (file input)
+
+### Representative Profile Avatars
+- **Location**: Settings page → Profile tab
+- **Storage**: `users.profileImageUrl` (varchar column)
+- **API**: PATCH `/api/users/:id` with Zod validation
+- **Display**: Shows on Representatives page and throughout admin dashboard
+- **Fallback**: TIGON default avatar if no custom avatar uploaded
+- **Test ID**: `profile-avatar-upload` (button), `profile-avatar-input` (file input)
+
+### API Endpoints
+1. **PATCH `/api/users/:id`** - Updates user profile with avatar
+   - Validation: Zod schema restricts to whitelisted fields (username, email, name, status, profileImageUrl)
+   - Authorization: Requires authentication
+   - Response: Returns updated user object without password field
+   - Cache: Invalidates `/api/user` query to refresh auth state
+
+2. **GET `/api/user`** - Returns authenticated user with profileImageUrl
+   - Used by Settings page to display current avatar
+
+3. **GET `/api/representatives`** - Returns all representatives with profileImageUrl
+   - Used by Representatives page to display avatars in team list
+
+### Data Schema
+```typescript
+// Widget icon
+settings.widgetConfig = {
+  avatarUrl: string // base64 data URL or empty
+  // ... other config
+}
+
+// Representative avatar
+users.profileImageUrl = varchar // base64 data URL or null
+```
+
+### Widget Integration
+- **chatbot.js**: Dynamically loads uploaded icon from widgetConfig.avatarUrl
+- **Caching**: Widget fetches latest config on each page load
+- **WordPress Compatible**: Works with WP Rocket and Cloudflare optimization
+
+## Usage
+
+### Upload Chatbot Icon
+1. Navigate to Widget Settings page
+2. Scroll to Widget Appearance section
+3. Click upload button or click existing avatar
+4. Select image file (PNG/JPG/GIF, max 2MB)
+5. Image immediately uploads and displays preview
+6. Icon appears on customer-facing chat widget
+
+### Upload Representative Avatar
+1. Navigate to Settings page
+2. Select Profile tab
+3. Click upload button or click existing avatar
+4. Select image file (PNG/JPG/GIF, max 2MB)
+5. Image immediately uploads and displays preview
+6. Avatar appears on Representatives page and throughout dashboard
+
+### Remove Uploaded Image
+1. Click the "Remove" button below preview
+2. Reverts to default TIGON icon/avatar
+3. Update persists to database immediately
+
+## Technical Notes
+- **Storage Format**: Base64 data URLs stored directly in database (no separate file storage)
+- **Size Limit**: 2MB client-side validation prevents oversized uploads
+- **Browser Support**: Works in all modern browsers with FileReader API
+- **Performance**: Base64 encoding happens client-side, minimal server processing
+- **Security**: Zod validation ensures only image data URLs accepted for profileImageUrl field
