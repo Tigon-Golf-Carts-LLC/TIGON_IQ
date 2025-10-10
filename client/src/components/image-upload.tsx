@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Upload, X } from "lucide-react";
@@ -17,6 +17,11 @@ export function ImageUpload({ value, onChange, label = "Upload Image", fallbackI
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Sync preview state when value prop changes (handles async data loading)
+  useEffect(() => {
+    setPreview(value || "");
+  }, [value]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
