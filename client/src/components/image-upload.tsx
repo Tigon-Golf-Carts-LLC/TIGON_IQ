@@ -37,11 +37,11 @@ export function ImageUpload({ value, onChange, label = "Upload Image", fallbackI
       return;
     }
 
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please select an image smaller than 2MB",
+        description: "Please select an image smaller than 10MB",
         variant: "destructive",
       });
       return;
@@ -134,7 +134,7 @@ export function ImageUpload({ value, onChange, label = "Upload Image", fallbackI
           </div>
           
           <p className="text-xs text-muted-foreground">
-            PNG, JPG, GIF up to 2MB
+            PNG, JPG, GIF up to 10MB
           </p>
         </div>
       </div>

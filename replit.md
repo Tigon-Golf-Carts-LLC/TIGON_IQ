@@ -147,7 +147,7 @@ The system provides comprehensive avatar/icon customization for both the chatbot
 
 ### ImageUpload Component (`client/src/components/image-upload.tsx`)
 - **Reusable Component**: Handles all avatar/icon uploads with consistent UX
-- **File Support**: PNG, JPG, GIF formats up to 2MB file size
+- **File Support**: PNG, JPG, GIF formats up to 10MB file size
 - **Base64 Storage**: Converts uploaded images to base64 data URLs for database storage
 - **Preview System**: Real-time preview using shadcn/ui Avatar component
 - **Validation**: Client-side file type and size validation with toast notifications
@@ -205,7 +205,7 @@ users.profileImageUrl = varchar // base64 data URL or null
 1. Navigate to Widget Settings page
 2. Scroll to Widget Appearance section
 3. Click upload button or click existing avatar
-4. Select image file (PNG/JPG/GIF, max 2MB)
+4. Select image file (PNG/JPG/GIF, max 10MB)
 5. Image immediately uploads and displays preview
 6. Icon appears on customer-facing chat widget
 
@@ -213,7 +213,7 @@ users.profileImageUrl = varchar // base64 data URL or null
 1. Navigate to Settings page
 2. Select Profile tab
 3. Click upload button or click existing avatar
-4. Select image file (PNG/JPG/GIF, max 2MB)
+4. Select image file (PNG/JPG/GIF, max 10MB)
 5. Image immediately uploads and displays preview
 6. Avatar appears on Representatives page and throughout dashboard
 
@@ -224,7 +224,7 @@ users.profileImageUrl = varchar // base64 data URL or null
 
 ## Technical Notes
 - **Storage Format**: Base64 data URLs stored directly in database (no separate file storage)
-- **Size Limit**: 2MB client-side validation prevents oversized uploads
+- **Size Limit**: 10MB client-side validation prevents oversized uploads
 - **Browser Support**: Works in all modern browsers with FileReader API
 - **Performance**: Base64 encoding happens client-side, minimal server processing
 - **Security**: Zod validation ensures only image data URLs accepted for profileImageUrl field
