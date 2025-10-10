@@ -314,7 +314,9 @@ export default function WidgetSettingsPage() {
                               {website.domain}
                             </span>
                             <div className="text-xs text-muted-foreground">
-                              {website.allowedPages?.length || 0} allowed pages
+                              {!website.whitelistMode || (website.allowedPages?.length || 0) === 0 
+                                ? "All pages allowed" 
+                                : `${website.allowedPages?.length || 0} allowed pages`}
                             </div>
                           </div>
                         </div>
