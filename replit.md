@@ -67,7 +67,7 @@ Preferred communication style: Simple, everyday language.
 - **OpenAI**: gpt-4o-mini integration for automated customer service responses and conversation analysis
 
 ## Email Services
-- **SendGrid**: Transactional email delivery for conversation notifications and summaries
+- **Email Service**: Transactional email delivery for conversation notifications and summaries
 
 ## Frontend Libraries
 - **UI Framework**: Extensive Radix UI component suite for accessible, unstyled primitives

@@ -239,7 +239,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <Mail className="h-4 w-4 text-red-600" />
-                        <span className="text-sm">Email (SendGrid)</span>
+                        <span className="text-sm">Email</span>
                       </div>
                       <Badge variant={settings?.emailConfig?.enabled ? 'default' : 'secondary'}>
                         {settings?.emailConfig?.enabled ? 'Connected' : 'Disabled'}

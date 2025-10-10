@@ -149,7 +149,7 @@ export default function IntegrationsPage() {
                     </div>
                     <div>
                       <p className="font-medium">Email</p>
-                      <p className="text-sm text-muted-foreground">SendGrid</p>
+                      <p className="text-sm text-muted-foreground">Email Service</p>
                     </div>
                   </div>
                   {emailConfig.enabled ? (
