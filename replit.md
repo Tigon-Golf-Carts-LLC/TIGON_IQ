@@ -47,6 +47,7 @@ Preferred communication style: Simple, everyday language.
 - **Message Types**: Support for text, file, voice, and image messages
 - **Typing Indicators**: Real-time typing status between participants
 - **Connection State**: Automatic reconnection and heartbeat monitoring
+- **Auto-Scroll**: Messages automatically scroll into view when conversations are selected or new messages arrive
 
 ## Embeddable Widget
 - **Deployment**: Standalone JavaScript widget hosted at https://tigoniq.com/chatbot.js
