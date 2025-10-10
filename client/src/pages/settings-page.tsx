@@ -30,6 +30,7 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [exportLoading, setExportLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
 
   const { data: settings } = useQuery({
     queryKey: ["/api/settings"],
@@ -94,6 +95,34 @@ export default function SettingsPage() {
       });
     } finally {
       setExportLoading(false);
+    }
+  };
+
+  const handleSyncFromProduction = async () => {
+    setSyncLoading(true);
+    try {
+      const res = await apiRequest("POST", "/api/sync/trigger");
+      const result = await res.json();
+      
+      if (result.success) {
+        toast({
+          title: "Sync successful",
+          description: `Synced ${result.stats.users} users, ${result.stats.websites} websites, ${result.stats.conversations} conversations, and ${result.stats.messages} messages from production.`,
+        });
+        
+        // Invalidate all queries to refresh the UI with synced data
+        queryClient.invalidateQueries();
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      toast({
+        title: "Sync failed",
+        description: error instanceof Error ? error.message : "Failed to sync from production. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncLoading(false);
     }
   };
 
@@ -383,6 +412,22 @@ export default function SettingsPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-4">
+                      <div>
+                        <h4 className="font-medium mb-2">Sync from Production</h4>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Pull all data from the production database (tigoniq.com) to development. This will update users, websites, conversations, messages, and settings.
+                        </p>
+                        <Button 
+                          onClick={handleSyncFromProduction}
+                          disabled={syncLoading}
+                          variant="default"
+                          data-testid="button-sync-production"
+                        >
+                          <Database className="h-4 w-4 mr-2" />
+                          {syncLoading ? "Syncing..." : "Sync from Production"}
+                        </Button>
+                      </div>
+
                       <div>
                         <h4 className="font-medium mb-2">Export Data</h4>
                         <p className="text-sm text-muted-foreground mb-4">

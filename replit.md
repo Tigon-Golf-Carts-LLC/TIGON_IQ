@@ -84,3 +84,55 @@ Preferred communication style: Simple, everyday language.
 - **Slack**: Webhook-based message routing to Slack channels
 - **Trello**: Conversation tracking via Trello card creation and updates
 - **Voice Processing**: Voice-to-text capabilities for audio messages
+
+# Production-Development Database Sync
+
+## Overview
+The system includes a production-to-development database synchronization feature that allows automatic syncing of all data from the production database (tigoniq.com) to the development database. This ensures development environment stays in sync with production data for testing and debugging.
+
+## Architecture
+- **Production Database**: Hosted at tigoniq.com with separate PostgreSQL instance
+- **Development Database**: Local Neon PostgreSQL database
+- **Sync Direction**: One-way sync from production → development (read-only on production)
+
+## Implementation Details
+
+### API Endpoints
+1. **Export Endpoint** (`GET /api/sync/export`)
+   - Deployed on production (tigoniq.com)
+   - Requires Bearer token authentication via `SYNC_SECRET_KEY` environment variable
+   - Returns complete database snapshot: users, websites, conversations, messages, settings, integration logs
+
+2. **Trigger Endpoint** (`POST /api/sync/trigger`)
+   - Available on development environment
+   - Requires authentication (admin/representative login)
+   - Fetches data from production and updates local database
+   - Returns sync statistics and success/failure status
+
+### Sync Service (`server/services/production-sync.ts`)
+- **Upsert Logic**: Updates existing records, inserts new ones
+- **Foreign Key Handling**: Syncs tables in correct order (users → websites → conversations → messages → settings → logs)
+- **Error Handling**: Continues syncing even if individual records fail, logs errors to console
+- **Production URL**: Configurable via `PRODUCTION_URL` environment variable (defaults to https://tigoniq.com)
+
+### UI Integration
+- **Location**: Admin Dashboard → Settings → Data tab
+- **Button**: "Sync from Production" with loading states
+- **Feedback**: Toast notifications with sync statistics
+- **Auto-refresh**: Invalidates all React Query caches after successful sync
+
+## Environment Variables
+- `PRODUCTION_URL`: Production server URL (default: https://tigoniq.com)
+- `SYNC_SECRET_KEY`: Bearer token for authenticating sync requests (default: "development")
+
+## Usage
+1. Navigate to Settings → Data tab in admin dashboard
+2. Click "Sync from Production" button
+3. Wait for sync to complete (shows stats: X users, Y websites, Z conversations synced)
+4. UI automatically refreshes with synced data
+
+## Security Considerations
+- Sync export endpoint protected by Bearer token authentication
+- Only authenticated admin/representative users can trigger sync
+- Passwords are synced as-is (hashed) from production
+- Sensitive data (API keys, secrets) included in settings sync
