@@ -699,6 +699,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User profile update
+  app.patch('/api/users/:id', requireAuth, async (req, res) => {
+    try {
+      const paramValidation = uuidParamSchema.safeParse(req.params);
+      if (!paramValidation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid user ID', 
+          details: paramValidation.error.issues 
+        });
+      }
+
+      // Validate update data - allow only specific fields for partial updates
+      const userUpdateSchema = z.object({
+        username: z.string().optional(),
+        email: z.string().email().optional(),
+        name: z.string().optional(),
+        status: z.enum(['online', 'busy', 'offline']).optional(),
+        profileImageUrl: z.string().optional()
+      });
+
+      const validationResult = userUpdateSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid request body', 
+          details: validationResult.error.issues 
+        });
+      }
+
+      const updatedUser = await storage.updateUser(req.params.id, validationResult.data);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Remove password from response
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      res.status(500).json({ message: 'Failed to update user' });
+    }
+  });
+
   // Websites
   app.get('/api/websites', requireAuth, async (req, res) => {
     try {

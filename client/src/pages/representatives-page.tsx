@@ -59,8 +59,8 @@ export default function RepresentativesPage() {
   });
 
   const filteredRepresentatives = representatives?.filter((rep: any) =>
-    rep.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    rep.email.toLowerCase().includes(searchTerm.toLowerCase())
+    rep.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    rep.email?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const getStatusColor = (status: string) => {
@@ -83,8 +83,8 @@ export default function RepresentativesPage() {
 
   const getRepresentativeConversations = (repId: string) => {
     return conversations?.filter((conv: any) => 
-      conv.conversation.assignedRepresentativeId === repId &&
-      (conv.conversation.status === 'active' || conv.conversation.status === 'waiting')
+      conv.conversation?.assignedRepresentativeId === repId &&
+      (conv.conversation?.status === 'active' || conv.conversation?.status === 'waiting')
     ) || [];
   };
 
@@ -226,7 +226,7 @@ export default function RepresentativesPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
                           <Avatar className="h-12 w-12 bg-white">
-                            <AvatarImage src={defaultAvatar} alt="Representative" />
+                            <AvatarImage src={representative.profileImageUrl || defaultAvatar} alt="Representative" />
                             <AvatarFallback className="bg-white text-foreground">
                               {representative.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                             </AvatarFallback>
