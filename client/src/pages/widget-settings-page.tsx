@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ChatWidgetPreview } from "@/components/chat-widget-preview";
+import { ImageUpload } from "@/components/image-upload";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -20,7 +21,8 @@ import {
   MessageCircle,
   Plus,
   Trash2,
-  Eye
+  Eye,
+  Image as ImageIcon
 } from "lucide-react";
 
 import { Settings, Website } from "@shared/schema";
@@ -167,6 +169,22 @@ export default function WidgetSettingsPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-base font-medium mb-3 block">Chatbot Avatar/Icon</Label>
+                      <ImageUpload
+                        value={widgetConfig.avatarUrl || ""}
+                        onChange={(dataUrl) => handleSettingsUpdate({ avatarUrl: dataUrl })}
+                        label="Upload Icon"
+                        fallbackIcon={<MessageCircle className="h-8 w-8 text-muted-foreground" />}
+                        testId="chatbot-avatar"
+                      />
+                      <p className="text-sm text-muted-foreground mt-2">
+                        This icon will appear in the chat widget on your website
+                      </p>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="position">Widget Position</Label>

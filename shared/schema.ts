@@ -61,6 +61,7 @@ export const settings = pgTable("settings", {
     welcomeMessage: "Hi! How can we help you today?",
     showOnMobile: true,
     showOnDesktop: true,
+    avatarUrl: "",
   }),
   aiConfig: jsonb("ai_config").notNull().default({
     enabled: true,

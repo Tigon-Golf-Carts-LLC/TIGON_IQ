@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { ImageUpload } from "@/components/image-upload";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -23,7 +24,8 @@ import {
   Download,
   Upload,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  User
 } from "lucide-react";
 
 export default function SettingsPage() {
@@ -154,13 +156,79 @@ export default function SettingsPage() {
             </p>
           </div>
 
-          <Tabs defaultValue="business-hours" className="space-y-6">
+          <Tabs defaultValue="profile" className="space-y-6">
             <TabsList data-testid="settings-tabs">
+              <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="business-hours">Business Hours</TabsTrigger>
               <TabsTrigger value="notifications">Notifications</TabsTrigger>
               <TabsTrigger value="security">Security</TabsTrigger>
               <TabsTrigger value="data">Data Management</TabsTrigger>
             </TabsList>
+
+            {/* Profile */}
+            <TabsContent value="profile">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <User className="h-5 w-5 text-primary mr-2" />
+                    Profile Settings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <Label className="text-base font-medium mb-3 block">Profile Avatar</Label>
+                    <ImageUpload
+                      value={user?.profileImageUrl || ""}
+                      onChange={async (dataUrl) => {
+                        try {
+                          await apiRequest("PATCH", `/api/users/${user?.id}`, { profileImageUrl: dataUrl });
+                          queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                          toast({
+                            title: "Avatar updated",
+                            description: "Your profile avatar has been updated successfully.",
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "Update failed",
+                            description: "Failed to update your avatar. Please try again.",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                      label="Upload Avatar"
+                      fallbackIcon={<User className="h-8 w-8 text-muted-foreground" />}
+                      testId="profile-avatar"
+                    />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      This avatar will be displayed in conversations and throughout the dashboard
+                    </p>
+                  </div>
+
+                  <div className="space-y-4 pt-4 border-t">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Name</Label>
+                        <p className="font-medium">{user?.name}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Email</Label>
+                        <p className="font-medium">{user?.email}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Role</Label>
+                        <Badge variant="default">{user?.role}</Badge>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Status</Label>
+                        <Badge variant={user?.status === 'online' ? 'default' : 'secondary'}>
+                          {user?.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             {/* Business Hours */}
             <TabsContent value="business-hours">

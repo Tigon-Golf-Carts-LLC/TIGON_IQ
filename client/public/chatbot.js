@@ -430,6 +430,11 @@
   // Create SVG icons
   function createIcon(type) {
     if (type === 'tiger') {
+      // Use custom avatar if uploaded, otherwise use default tiger icon
+      const avatarUrl = widgetConfig?.avatarUrl;
+      if (avatarUrl) {
+        return `<img src="${avatarUrl}" alt="Chatbot" style="width: 70px; height: 70px; object-fit: contain; border-radius: 50%;">`;
+      }
       return `<img src="${API_BASE}/tigon-chatbot-widget.png" alt="TIGON Chatbot" style="width: 70px; height: 70px; object-fit: contain;">`;
     }
     
