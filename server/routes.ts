@@ -824,5 +824,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sync API - Export all data (for production to serve development)
+  app.get('/api/sync/export', async (req, res) => {
+    try {
+      // Verify sync secret key for security
+      const authHeader = req.headers.authorization;
+      const syncSecret = process.env.SYNC_SECRET_KEY || 'development';
+      
+      if (authHeader !== `Bearer ${syncSecret}`) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      // Fetch all data from storage
+      const users = await storage.getAllUsers();
+      const websites = await storage.getAllWebsites();
+      const conversations = await storage.getAllConversations();
+      const messages = await storage.getAllMessages();
+      const settings = await storage.getAllSettings();
+      const integrationLogs = await storage.getAllIntegrationLogs();
+
+      res.json({
+        users,
+        websites,
+        conversations,
+        messages,
+        settings,
+        integrationLogs,
+      });
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      res.status(500).json({ message: 'Failed to export data' });
+    }
+  });
+
+  // Sync API - Trigger sync from production (for development)
+  app.post('/api/sync/trigger', requireAuth, async (req, res) => {
+    try {
+      const { productionSyncService } = await import('./services/production-sync');
+      const result = await productionSyncService.syncFromProduction();
+      res.json(result);
+    } catch (error) {
+      console.error('Error triggering sync:', error);
+      res.status(500).json({ 
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to trigger sync',
+        stats: {},
+      });
+    }
+  });
+
   return httpServer;
 }

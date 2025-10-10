@@ -21,6 +21,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
   getAllRepresentatives(): Promise<User[]>;
+  getAllUsers(): Promise<User[]>;
   updateRepresentativeStatus(id: string, status: string): Promise<void>;
 
   // Website methods
@@ -38,20 +39,24 @@ export interface IStorage {
   getActiveConversations(): Promise<ConversationListItem[]>;
   getConversationsByRepresentative(repId: string): Promise<ConversationListItem[]>;
   getConversationStats(): Promise<StatsResponse>;
+  getAllConversations(): Promise<Conversation[]>;
 
   // Message methods
   getMessage(id: string): Promise<Message | undefined>;
   createMessage(message: InsertMessage): Promise<Message>;
   getConversationMessages(conversationId: string): Promise<Message[]>;
   getRecentMessages(limit?: number): Promise<Message[]>;
+  getAllMessages(): Promise<Message[]>;
 
   // Settings methods
   getSettings(): Promise<Settings | undefined>;
   createOrUpdateSettings(settings: Partial<InsertSettings>): Promise<Settings>;
+  getAllSettings(): Promise<Settings[]>;
 
   // Integration logs
   createIntegrationLog(log: Omit<IntegrationLog, 'id' | 'createdAt'>): Promise<IntegrationLog>;
   getIntegrationLogs(conversationId?: string): Promise<IntegrationLog[]>;
+  getAllIntegrationLogs(): Promise<IntegrationLog[]>;
 
   // Session store
   sessionStore: session.Store;
@@ -383,6 +388,27 @@ export class DatabaseStorage implements IStorage {
       .from(integrationLogs)
       .orderBy(desc(integrationLogs.createdAt))
       .limit(100);
+  }
+
+  // Sync methods - Get all data for export
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async getAllConversations(): Promise<Conversation[]> {
+    return await db.select().from(conversations);
+  }
+
+  async getAllMessages(): Promise<Message[]> {
+    return await db.select().from(messages);
+  }
+
+  async getAllSettings(): Promise<Settings[]> {
+    return await db.select().from(settings);
+  }
+
+  async getAllIntegrationLogs(): Promise<IntegrationLog[]> {
+    return await db.select().from(integrationLogs);
   }
 }
 
