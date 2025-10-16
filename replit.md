@@ -48,6 +48,10 @@ Preferred communication style: Simple, everyday language.
 - **Typing Indicators**: Real-time typing status between participants
 - **Connection State**: Automatic reconnection and heartbeat monitoring
 - **Auto-Scroll**: Messages automatically scroll into view when conversations are selected or new messages arrive
+- **Message Validation**: All WebSocket messages validated using Zod schemas before processing
+  - `send_message`: Only requires `{type, content}` - server derives conversationId/sender from connection state
+  - `join_conversation`: Requires `{type, conversationId}` with optional userId
+  - Extra fields in messages cause validation failures and 400 errors
 
 ## Embeddable Widget
 - **Deployment**: Standalone JavaScript widget hosted at https://tigoniq.com/chatbot.js

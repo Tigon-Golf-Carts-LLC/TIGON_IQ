@@ -563,17 +563,12 @@
     messages.push(customerMessage);
     renderMessages();
 
-    const messageData = {
-      type: 'send_message',
-      conversationId,
-      content,
-      senderType: 'customer',
-      senderId: null,
-    };
-
     // Send via WebSocket if connected
     if (socket && isConnected) {
-      socket.send(JSON.stringify(messageData));
+      socket.send(JSON.stringify({
+        type: 'send_message',
+        content,
+      }));
     }
 
     // Also send via HTTP as backup
