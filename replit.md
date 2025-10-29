@@ -16,6 +16,17 @@ Preferred communication style: Simple, everyday language.
 - **Routing**: Wouter for lightweight client-side routing
 - **Authentication**: Context-based auth provider with protected routes
 
+## UI/UX Features
+- **Sticky Navigation**: Navbar stays fixed at top of screen across all pages when scrolling
+  - Implementation: `sticky top-0 z-50` on navbar component
+  - Parent containers use flexible layout without `overflow-hidden` to enable sticky positioning
+  - Scrolling managed by `<main>` elements with `overflow-y-auto`
+- **Custom Scrollbars**: Always-visible scrollbars with light/dark mode support
+  - Applied to: conversations list, messages area, and long individual messages
+  - Width: 12px with custom track/thumb colors
+- **Sticky Chat Header**: Fixed conversation controls remain accessible while scrolling through message history
+- **Representative Assignment**: Dropdown with real-time filtering showing only online representatives with green dot indicators
+
 ## Backend Architecture
 - **Runtime**: Node.js with Express.js framework
 - **Language**: TypeScript with ESM modules

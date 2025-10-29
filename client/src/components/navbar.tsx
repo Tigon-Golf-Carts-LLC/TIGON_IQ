@@ -22,7 +22,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="bg-card border-b border-border px-6 py-4" data-testid="navbar">
+    <nav className="sticky top-0 z-50 bg-card border-b border-border px-6 py-4" data-testid="navbar">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">

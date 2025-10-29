@@ -414,9 +414,9 @@ export default function ConversationsPage() {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col">
         <Navbar />
-        <main className="flex-1 flex">
+        <main className="flex-1 flex overflow-hidden">
           {/* Conversations List */}
           <div className="w-1/3 border-r border-border flex flex-col">
             <div className="p-4 border-b border-border">
