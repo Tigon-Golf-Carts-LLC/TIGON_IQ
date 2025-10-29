@@ -11,6 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 import defaultAvatar from "@assets/TIGON Chat Bot ICON_1757612559255.png";
 import { 
   MessageCircle, 
@@ -20,7 +31,8 @@ import {
   Bot,
   Send,
   UserCheck,
-  Lightbulb
+  Lightbulb,
+  Trash2
 } from "lucide-react";
 
 import { ConversationListItem, ConversationDetails } from "@shared/schema";
@@ -34,7 +46,10 @@ export default function ConversationsPage() {
   const [wsJoined, setWsJoined] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const { user } = useAuth();
+  const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Check for selected conversation from query parameter
@@ -248,6 +263,45 @@ export default function ConversationsPage() {
     },
   });
 
+  // Delete conversation mutation
+  const deleteConversationMutation = useMutation({
+    mutationFn: async (conversationId: string) => {
+      const res = await apiRequest("DELETE", `/api/conversations/${conversationId}`);
+      return res.json();
+    },
+    onSuccess: (_data, deletedConversationId) => {
+      toast({
+        title: "Conversation deleted",
+        description: "The conversation has been successfully deleted.",
+      });
+      // If we deleted the selected conversation, clear the selection
+      if (deletedConversationId === selectedConversation) {
+        setSelectedConversation(null);
+      }
+      // Invalidate conversations list query
+      queryClient.invalidateQueries({
+        queryKey: ["/api/conversations"],
+      });
+      // Invalidate the specific conversation detail query
+      queryClient.invalidateQueries({
+        queryKey: ["/api/conversations", deletedConversationId],
+      });
+      // Close dialog and reset state
+      setDeleteDialogOpen(false);
+      setConversationToDelete(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete conversation. Please try again.",
+        variant: "destructive",
+      });
+      // Close dialog even on error
+      setDeleteDialogOpen(false);
+      setConversationToDelete(null);
+    },
+  });
+
   // Get AI suggestions mutation
   const getAISuggestionsMutation = useMutation({
     mutationFn: async () => {
@@ -362,6 +416,19 @@ export default function ConversationsPage() {
                             <Badge variant="outline" className="text-xs">
                               {conv.status}
                             </Badge>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 hover:bg-destructive hover:text-destructive-foreground"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConversationToDelete(conv.id);
+                                setDeleteDialogOpen(true);
+                              }}
+                              data-testid={`button-delete-${conv.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -587,6 +654,29 @@ export default function ConversationsPage() {
           </div>
         </main>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent data-testid="dialog-delete-conversation">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Conversation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this conversation? This action cannot be undone and will permanently remove all messages.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => conversationToDelete && deleteConversationMutation.mutate(conversationToDelete)}
+              disabled={deleteConversationMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              {deleteConversationMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

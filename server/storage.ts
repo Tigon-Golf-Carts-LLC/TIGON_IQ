@@ -36,6 +36,7 @@ export interface IStorage {
   getConversationWithDetails(id: string): Promise<ConversationDetails | undefined>;
   createConversation(conversation: InsertConversation): Promise<Conversation>;
   updateConversation(id: string, updates: Partial<Conversation>): Promise<Conversation | undefined>;
+  deleteConversation(id: string): Promise<void>;
   getActiveConversations(): Promise<ConversationListItem[]>;
   getConversationsByRepresentative(repId: string): Promise<ConversationListItem[]>;
   getConversationStats(): Promise<StatsResponse>;
@@ -222,6 +223,13 @@ export class DatabaseStorage implements IStorage {
       .where(eq(conversations.id, id))
       .returning();
     return conversation || undefined;
+  }
+
+  async deleteConversation(id: string): Promise<void> {
+    // Delete messages first due to foreign key constraint
+    await db.delete(messages).where(eq(messages.conversationId, id));
+    // Then delete the conversation
+    await db.delete(conversations).where(eq(conversations.id, id));
   }
 
   async getActiveConversations(): Promise<ConversationListItem[]> {

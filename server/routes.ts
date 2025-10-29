@@ -471,6 +471,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete('/api/conversations/:id', requireAuth, async (req, res) => {
+    try {
+      const paramValidation = uuidParamSchema.safeParse(req.params);
+      if (!paramValidation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid conversation ID', 
+          details: paramValidation.error.issues 
+        });
+      }
+
+      // Check if conversation exists before deleting
+      const conversation = await storage.getConversation(paramValidation.data.id);
+      if (!conversation) {
+        return res.status(404).json({ message: 'Conversation not found' });
+      }
+
+      // Authorization: Allow deletion by admin, assigned representative, or any representative for unassigned conversations
+      const user = req.user;
+      const isAdmin = user?.role === 'admin';
+      const isAssignedRep = conversation.assignedRepresentativeId === user?.id;
+      const isUnassigned = conversation.assignedRepresentativeId === null;
+      
+      if (!isAdmin && !isAssignedRep && !isUnassigned) {
+        return res.status(403).json({ 
+          message: 'You can only delete conversations assigned to you. Contact an admin to delete other conversations.' 
+        });
+      }
+
+      await storage.deleteConversation(req.params.id);
+      res.status(200).json({ message: 'Conversation deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      res.status(500).json({ message: 'Failed to delete conversation' });
+    }
+  });
+
   // POST /api/conversations/:id/takeover - Allow representatives to take over AI-assisted conversations
   app.post('/api/conversations/:id/takeover', requireAuth, async (req, res) => {
     try {
