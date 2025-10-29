@@ -620,9 +620,11 @@ export default function ConversationsPage() {
                               {formatTime(message.createdAt.toString())}
                             </span>
                           </div>
-                          <p className="text-sm" data-testid={`message-content-${message.id}`}>
-                            {message.content}
-                          </p>
+                          <div className="max-h-[400px] overflow-y-auto">
+                            <p className="text-sm whitespace-pre-wrap break-words" data-testid={`message-content-${message.id}`}>
+                              {message.content}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     )) || (
