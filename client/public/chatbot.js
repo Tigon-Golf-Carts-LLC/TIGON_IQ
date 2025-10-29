@@ -452,19 +452,30 @@
 
   // Fetch widget configuration
   async function loadConfig() {
+    const domain = window.location.hostname;
+    
     try {
-      const domain = window.location.hostname;
-      const response = await fetch(`${API_BASE}/api/widget/config?domain=${domain}`);
+      console.log('[TIGON Chatbot] Loading config for domain:', domain);
+      console.log('[TIGON Chatbot] API Base:', API_BASE);
+      
+      const url = `${API_BASE}/api/widget/config?domain=${domain}`;
+      console.log('[TIGON Chatbot] Fetching from:', url);
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
-        throw new Error('Widget not configured for this domain');
+        console.error('[TIGON Chatbot] Config fetch failed. Status:', response.status);
+        console.error('[TIGON Chatbot] Response:', await response.text());
+        throw new Error(`Widget not configured for domain: ${domain}`);
       }
       
       const config = await response.json();
+      console.log('[TIGON Chatbot] Config loaded successfully');
       widgetConfig = config.widgetConfig;
       return config;
     } catch (error) {
-      console.error('Failed to load widget config:', error);
+      console.error('[TIGON Chatbot] Failed to load widget config:', error);
+      console.error('[TIGON Chatbot] Make sure:', domain, 'is registered in the Widget Settings at tigoniq.com');
       return null;
     }
   }
