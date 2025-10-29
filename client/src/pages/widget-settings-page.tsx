@@ -142,7 +142,7 @@ export default function WidgetSettingsPage() {
     });
   };
 
-  const embedCode = `<script src="${window.location.origin}/chatbot.js"></script>`;
+  const embedCode = `<script src="https://tigoniq.com/chatbot.js" data-cfasync="false"></script>`;
 
   return (
     <div className="flex h-screen bg-background">
