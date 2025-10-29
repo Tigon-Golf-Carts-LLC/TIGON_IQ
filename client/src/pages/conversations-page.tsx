@@ -39,7 +39,8 @@ import {
   UserCheck,
   Lightbulb,
   Trash2,
-  UserPlus
+  UserPlus,
+  Globe
 } from "lucide-react";
 
 import { ConversationListItem, ConversationDetails } from "@shared/schema";
@@ -520,9 +521,12 @@ export default function ConversationsPage() {
                         <h3 className="font-semibold" data-testid="chat-customer-name">
                           {conversationDetails.customerEmail || 'Anonymous Customer'}
                         </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {conversationDetails.website?.domain}
-                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="font-normal">
+                            <Globe className="h-3 w-3 mr-1" />
+                            {conversationDetails.website?.domain || 'Unknown domain'}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
