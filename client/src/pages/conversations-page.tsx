@@ -431,7 +431,7 @@ export default function ConversationsPage() {
               </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto scrollbar-visible">
               <div className="p-4 space-y-3" data-testid="conversations-list">
                 {conversations && conversations.length > 0 ? (
                   conversations.map((conv) => (
@@ -587,7 +587,7 @@ export default function ConversationsPage() {
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4">
+                <div className="flex-1 overflow-y-auto scrollbar-visible p-4">
                   <div className="space-y-4" data-testid="chat-messages">
                     {conversationDetails.messages?.map((message: any) => (
                       <div
@@ -619,7 +619,7 @@ export default function ConversationsPage() {
                               {formatTime(message.createdAt.toString())}
                             </span>
                           </div>
-                          <div className="max-h-[400px] overflow-y-auto">
+                          <div className="max-h-[400px] overflow-y-auto scrollbar-visible">
                             <p className="text-sm whitespace-pre-wrap break-words" data-testid={`message-content-${message.id}`}>
                               {message.content}
                             </p>
