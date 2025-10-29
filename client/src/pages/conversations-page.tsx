@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
@@ -432,7 +431,7 @@ export default function ConversationsPage() {
               </div>
             </div>
             
-            <ScrollArea className="flex-1">
+            <div className="flex-1 overflow-y-auto">
               <div className="p-4 space-y-3" data-testid="conversations-list">
                 {conversations && conversations.length > 0 ? (
                   conversations.map((conv) => (
@@ -500,7 +499,7 @@ export default function ConversationsPage() {
                   </div>
                 )}
               </div>
-            </ScrollArea>
+            </div>
           </div>
 
           {/* Chat Interface */}
@@ -588,7 +587,7 @@ export default function ConversationsPage() {
                 </div>
 
                 {/* Messages */}
-                <ScrollArea className="flex-1 p-4">
+                <div className="flex-1 overflow-y-auto p-4">
                   <div className="space-y-4" data-testid="chat-messages">
                     {conversationDetails.messages?.map((message: any) => (
                       <div
@@ -636,7 +635,7 @@ export default function ConversationsPage() {
                     {/* Auto-scroll anchor */}
                     <div ref={messagesEndRef} />
                   </div>
-                </ScrollArea>
+                </div>
 
                 {/* AI Suggestions (when in manual mode) */}
                 {isManualMode && (
