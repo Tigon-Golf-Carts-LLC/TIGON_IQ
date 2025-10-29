@@ -12,6 +12,13 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -32,7 +39,8 @@ import {
   Send,
   UserCheck,
   Lightbulb,
-  Trash2
+  Trash2,
+  UserPlus
 } from "lucide-react";
 
 import { ConversationListItem, ConversationDetails } from "@shared/schema";
@@ -69,6 +77,16 @@ export default function ConversationsPage() {
     queryKey: ["/api/conversations", selectedConversation],
     enabled: !!selectedConversation,
   });
+
+  const { data: representatives } = useQuery<any[]>({
+    queryKey: ["/api/representatives"],
+  });
+
+  // Filter to get only online representatives
+  const onlineRepresentatives = useMemo(() => 
+    representatives?.filter(rep => rep.status === 'online') || [],
+    [representatives]
+  );
 
   // Manual mode is now derived from server state instead of local state
   const isManualMode = useMemo(() => 
@@ -302,6 +320,39 @@ export default function ConversationsPage() {
     },
   });
 
+  // Assign conversation to representative mutation
+  const assignConversationMutation = useMutation({
+    mutationFn: async (representativeId: string) => {
+      if (!selectedConversation) throw new Error("No conversation selected");
+      
+      const res = await apiRequest("PATCH", `/api/conversations/${selectedConversation}`, {
+        assignedRepresentativeId: representativeId,
+      });
+      return res.json();
+    },
+    onSuccess: (data, representativeId) => {
+      const assignedRep = representatives?.find(r => r.id === representativeId);
+      toast({
+        title: "Conversation assigned",
+        description: `Conversation has been assigned to ${assignedRep?.name || 'representative'}.`,
+      });
+      // Refresh conversation details and list
+      queryClient.invalidateQueries({
+        queryKey: ["/api/conversations", selectedConversation],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/conversations"],
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to assign conversation. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Get AI suggestions mutation
   const getAISuggestionsMutation = useMutation({
     mutationFn: async () => {
@@ -496,6 +547,30 @@ export default function ConversationsPage() {
                           Manual Mode
                         </Badge>
                       )}
+                      
+                      {/* Assign to Representative Dropdown */}
+                      {onlineRepresentatives.length > 0 && (
+                        <Select
+                          onValueChange={(representativeId) => assignConversationMutation.mutate(representativeId)}
+                          disabled={assignConversationMutation.isPending}
+                        >
+                          <SelectTrigger className="w-[180px] h-9" data-testid="select-assign-representative">
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            <SelectValue placeholder="Assign to..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {onlineRepresentatives.map((rep) => (
+                              <SelectItem key={rep.id} value={rep.id} data-testid={`option-rep-${rep.id}`}>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                  {rep.name}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                      
                       {conversationDetails.isAiAssisted && !isManualMode && (
                         <Button
                           size="sm"
