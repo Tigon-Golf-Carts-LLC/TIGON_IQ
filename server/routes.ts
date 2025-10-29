@@ -507,6 +507,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DELETE /api/conversations/messages/all - Delete all messages from all conversations
+  app.delete('/api/conversations/messages/all', requireAuth, async (req, res) => {
+    try {
+      // Only allow admins to delete all messages
+      const user = req.user;
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ 
+          message: 'Only admins can delete all messages' 
+        });
+      }
+
+      const deletedCount = await storage.deleteAllMessages();
+      res.status(200).json({ 
+        message: 'All messages deleted successfully',
+        deletedCount
+      });
+    } catch (error) {
+      console.error('Error deleting all messages:', error);
+      res.status(500).json({ message: 'Failed to delete all messages' });
+    }
+  });
+
   // POST /api/conversations/:id/takeover - Allow representatives to take over AI-assisted conversations
   app.post('/api/conversations/:id/takeover', requireAuth, async (req, res) => {
     try {

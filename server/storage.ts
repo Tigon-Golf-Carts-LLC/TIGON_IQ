@@ -48,6 +48,7 @@ export interface IStorage {
   getConversationMessages(conversationId: string): Promise<Message[]>;
   getRecentMessages(limit?: number): Promise<Message[]>;
   getAllMessages(): Promise<Message[]>;
+  deleteAllMessages(): Promise<number>;
 
   // Settings methods
   getSettings(): Promise<Settings | undefined>;
@@ -409,6 +410,11 @@ export class DatabaseStorage implements IStorage {
 
   async getAllMessages(): Promise<Message[]> {
     return await db.select().from(messages);
+  }
+
+  async deleteAllMessages(): Promise<number> {
+    const result = await db.delete(messages);
+    return result.rowCount || 0;
   }
 
   async getAllSettings(): Promise<Settings[]> {

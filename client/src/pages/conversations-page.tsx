@@ -56,6 +56,7 @@ export default function ConversationsPage() {
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+  const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -320,6 +321,41 @@ export default function ConversationsPage() {
     },
   });
 
+  // Delete all messages mutation
+  const deleteAllMessagesMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("DELETE", "/api/conversations/messages/all");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "All messages deleted",
+        description: `Successfully deleted ${data.deletedCount || 0} messages from all conversations.`,
+      });
+      // Refresh all conversations to show empty message lists
+      queryClient.invalidateQueries({
+        queryKey: ["/api/conversations"],
+      });
+      // If a conversation is selected, refresh its details
+      if (selectedConversation) {
+        queryClient.invalidateQueries({
+          queryKey: ["/api/conversations", selectedConversation],
+        });
+      }
+      // Close dialog
+      setDeleteAllDialogOpen(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete all messages. Please try again.",
+        variant: "destructive",
+      });
+      // Close dialog even on error
+      setDeleteAllDialogOpen(false);
+    },
+  });
+
   // Assign conversation to representative mutation
   const assignConversationMutation = useMutation({
     mutationFn: async (representativeId: string) => {
@@ -422,6 +458,18 @@ export default function ConversationsPage() {
           <div className="w-1/3 border-r border-border flex flex-col">
             <div className="p-4 border-b border-border">
               <h2 className="text-lg font-semibold mb-4" data-testid="page-title">Conversations</h2>
+              {user?.role === 'admin' && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="w-full mb-4"
+                  onClick={() => setDeleteAllDialogOpen(true)}
+                  data-testid="button-delete-all-messages"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete All Messages
+                </Button>
+              )}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
@@ -753,6 +801,29 @@ export default function ConversationsPage() {
               data-testid="button-confirm-delete"
             >
               {deleteConversationMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete All Messages Confirmation Dialog */}
+      <AlertDialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
+        <AlertDialogContent data-testid="dialog-delete-all-messages">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete All Messages</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete ALL messages from ALL conversations? This is a destructive action that cannot be undone. The conversations will remain, but all message history will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete-all">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteAllMessagesMutation.mutate()}
+              disabled={deleteAllMessagesMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete-all"
+            >
+              {deleteAllMessagesMutation.isPending ? "Deleting..." : "Delete All Messages"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
