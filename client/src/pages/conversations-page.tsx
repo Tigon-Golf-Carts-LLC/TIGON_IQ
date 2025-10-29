@@ -329,51 +329,53 @@ export default function ConversationsPage() {
             
             <ScrollArea className="flex-1">
               <div className="p-4 space-y-3" data-testid="conversations-list">
-                {conversations?.map((conv) => (
-                  <Card 
-                    key={conv.id}
-                    className={`cursor-pointer transition-colors hover:bg-accent ${
-                      selectedConversation === conv.id ? 'ring-2 ring-primary' : ''
-                    }`}
-                    onClick={() => setSelectedConversation(conv.id)}
-                    data-testid={`conversation-item-${conv.id}`}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-8 w-8 bg-white">
-                            <AvatarImage src={defaultAvatar} alt="Customer" />
-                            <AvatarFallback className="text-xs bg-white">
-                              {conv.customerEmail?.[0]?.toUpperCase() || 'A'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium text-sm" data-testid={`conversation-customer-${conv.id}`}>
-                              {conv.customerEmail || 'Anonymous'}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {conv.website?.domain || 'Unknown website'}
-                            </p>
+                {conversations && conversations.length > 0 ? (
+                  conversations.map((conv) => (
+                    <Card 
+                      key={conv.id}
+                      className={`cursor-pointer transition-colors hover:bg-accent ${
+                        selectedConversation === conv.id ? 'ring-2 ring-primary' : ''
+                      }`}
+                      onClick={() => setSelectedConversation(conv.id)}
+                      data-testid={`conversation-item-${conv.id}`}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-8 w-8 bg-white">
+                              <AvatarImage src={defaultAvatar} alt="Customer" />
+                              <AvatarFallback className="text-xs bg-white">
+                                {conv.customerEmail?.[0]?.toUpperCase() || 'A'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium text-sm" data-testid={`conversation-customer-${conv.id}`}>
+                                {conv.customerEmail || 'Anonymous'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {conv.website?.domain || 'Unknown website'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className={`w-2 h-2 rounded-full ${getStatusColor(conv.status)}`}></div>
+                            <Badge variant="outline" className="text-xs">
+                              {conv.status}
+                            </Badge>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <div className={`w-2 h-2 rounded-full ${getStatusColor(conv.status)}`}></div>
-                          <Badge variant="outline" className="text-xs">
-                            {conv.status}
-                          </Badge>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Updated {formatTime(conv.createdAt.toString())}</span>
+                          {conv.representative === null && (
+                            <Badge variant="secondary" className="text-xs">
+                              AI Assisted
+                            </Badge>
+                          )}
                         </div>
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Updated {formatTime(conv.createdAt.toString())}</span>
-                        {conv.representative === null && (
-                          <Badge variant="secondary" className="text-xs">
-                            AI Assisted
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )) || (
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
                   <div className="text-center text-muted-foreground py-8">
                     <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>No conversations yet</p>
