@@ -26,6 +26,17 @@ Preferred communication style: Simple, everyday language.
   - Width: 12px with custom track/thumb colors
 - **Sticky Chat Header**: Fixed conversation controls remain accessible while scrolling through message history
 - **Representative Assignment**: Dropdown with real-time filtering showing only online representatives with green dot indicators
+- **Domain Badge**: Prominent badge in conversation header showing website domain with Globe icon for easy identification of conversation source
+
+## Admin Features
+- **Delete All Messages**: Admin-only feature to bulk delete all messages from all conversations
+  - Location: Full-width red button in Conversations page header
+  - Access: Only visible and accessible to users with role === 'admin'
+  - Behavior: Deletes all messages while preserving conversations
+  - Safety: Confirmation dialog with destructive warning before deletion
+  - Feedback: Success toast shows count of deleted messages
+  - API: DELETE /api/conversations/messages/all (admin-only endpoint)
+  - Test ID: `button-delete-all-messages`
 
 ## Backend Architecture
 - **Runtime**: Node.js with Express.js framework
