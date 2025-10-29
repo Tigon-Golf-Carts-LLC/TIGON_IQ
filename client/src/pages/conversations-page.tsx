@@ -503,11 +503,11 @@ export default function ConversationsPage() {
           </div>
 
           {/* Chat Interface */}
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col overflow-hidden">
             {selectedConversation && conversationDetails ? (
               <>
-                {/* Chat Header */}
-                <div className="p-4 border-b border-border">
+                {/* Chat Header - Fixed at top */}
+                <div className="p-4 border-b border-border bg-background">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <Avatar className="bg-white">
