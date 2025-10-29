@@ -806,7 +806,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const settings = await storage.getSettings();
       
       // Redact sensitive information before sending to client
-      if (settings.emailConfig && settings.emailConfig.smtpPassword) {
+      if (settings && settings.emailConfig && settings.emailConfig.smtpPassword) {
         settings.emailConfig = {
           ...settings.emailConfig,
           smtpPassword: '[REDACTED]' // Never expose password to frontend
