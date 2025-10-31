@@ -30,7 +30,7 @@ export const websites = pgTable("websites", {
 
 export const conversations = pgTable("conversations", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  websiteId: uuid("website_id").references(() => websites.id),
+  websiteId: uuid("website_id").references(() => websites.id, { onDelete: 'cascade' }),
   customerEmail: text("customer_email"),
   customerName: text("customer_name"),
   status: text("status").notNull().default("active"), // active, closed, waiting
