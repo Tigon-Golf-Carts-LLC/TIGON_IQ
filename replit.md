@@ -60,10 +60,17 @@ Preferred communication style: Simple, everyday language.
 - **Settings**: Global configuration for AI, email, and integration settings
 
 ## AI Integration
-- **Provider**: OpenAI API integration using gpt-4o-mini model
+- **Provider**: OpenAI API integration with configurable model selection
 - **API Key**: OPENAI_API_TIGON_IQ_KEY environment variable
+- **Model Selection**: User-selectable from available OpenAI models:
+  - GPT-4o (Latest, Most Capable)
+  - GPT-4o Mini (Fast & Cost-Effective) - Default
+  - GPT-4 Turbo
+  - GPT-4
+  - GPT-3.5 Turbo (Fastest)
 - **Features**: Automated response generation with TIGON-specific product knowledge, handoff decision making, and customer intent extraction
-- **Configuration**: Custom TIGON instructions stored in database, temperature (0.7), and max tokens (2000)
+- **Configuration**: Custom TIGON instructions stored in database, selectable model, temperature (0.7), and max tokens (2000)
+- **Model Storage**: Selected model persisted in `settings.aiConfig.model` and used for all AI responses
 
 ## Real-time Features
 - **WebSocket Management**: Per-conversation client tracking with authentication
