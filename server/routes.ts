@@ -518,10 +518,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const deletedCount = await storage.deleteAllMessages();
+      const result = await storage.deleteAllMessages();
       res.status(200).json({ 
-        message: 'All messages deleted successfully',
-        deletedCount
+        message: 'All conversations and messages deleted successfully',
+        ...result
       });
     } catch (error) {
       console.error('Error deleting all messages:', error);

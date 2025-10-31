@@ -328,27 +328,24 @@ export default function ConversationsPage() {
       return res.json();
     },
     onSuccess: (data) => {
+      const { deletedConversations = 0, deletedMessages = 0 } = data;
       toast({
-        title: "All messages deleted",
-        description: `Successfully deleted ${data.deletedCount || 0} messages from all conversations.`,
+        title: "All conversations deleted",
+        description: `Successfully deleted ${deletedConversations} conversation${deletedConversations !== 1 ? 's' : ''} and ${deletedMessages} message${deletedMessages !== 1 ? 's' : ''}.`,
       });
-      // Refresh all conversations to show empty message lists
+      // Refresh all conversations to show empty list
       queryClient.invalidateQueries({
         queryKey: ["/api/conversations"],
       });
-      // If a conversation is selected, refresh its details
-      if (selectedConversation) {
-        queryClient.invalidateQueries({
-          queryKey: ["/api/conversations", selectedConversation],
-        });
-      }
+      // Clear selected conversation
+      setSelectedConversation(null);
       // Close dialog
       setDeleteAllDialogOpen(false);
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to delete all messages. Please try again.",
+        description: "Failed to delete all conversations. Please try again.",
         variant: "destructive",
       });
       // Close dialog even on error
@@ -467,7 +464,7 @@ export default function ConversationsPage() {
                   data-testid="button-delete-all-messages"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete All Messages
+                  Delete All Conversations
                 </Button>
               )}
               <div className="relative">
@@ -806,13 +803,13 @@ export default function ConversationsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete All Messages Confirmation Dialog */}
+      {/* Delete All Conversations Confirmation Dialog */}
       <AlertDialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
         <AlertDialogContent data-testid="dialog-delete-all-messages">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete All Messages</AlertDialogTitle>
+            <AlertDialogTitle>Delete All Conversations</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete ALL messages from ALL conversations? This is a destructive action that cannot be undone. The conversations will remain, but all message history will be permanently removed.
+              Are you sure you want to delete ALL conversations and ALL messages? This is a destructive action that cannot be undone. All conversation records and message history will be permanently removed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -823,7 +820,7 @@ export default function ConversationsPage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               data-testid="button-confirm-delete-all"
             >
-              {deleteAllMessagesMutation.isPending ? "Deleting..." : "Delete All Messages"}
+              {deleteAllMessagesMutation.isPending ? "Deleting..." : "Delete All Conversations"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
