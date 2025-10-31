@@ -859,6 +859,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete('/api/websites/:id', requireAuth, async (req, res) => {
+    try {
+      const paramValidation = uuidParamSchema.safeParse(req.params);
+      if (!paramValidation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid website ID', 
+          details: paramValidation.error.issues 
+        });
+      }
+      
+      const success = await storage.deleteWebsite(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: 'Website not found' });
+      }
+      res.json({ message: 'Website deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting website:', error);
+      res.status(500).json({ message: 'Failed to delete website' });
+    }
+  });
+
   // Settings
   app.get('/api/settings', requireAuth, async (req, res) => {
     try {

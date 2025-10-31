@@ -103,6 +103,27 @@ export default function WidgetSettingsPage() {
     },
   });
 
+  const deleteWebsiteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/websites/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/websites"] });
+      toast({
+        title: "Website deleted",
+        description: "Website has been removed successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const widgetConfig = settings?.widgetConfig || {};
 
   const handleSettingsUpdate = (updates: any) => {
@@ -117,22 +138,35 @@ export default function WidgetSettingsPage() {
   const handleAddWebsite = () => {
     if (!newPageUrl.trim()) return;
     
+    let domain = newPageUrl.trim();
+    
+    // Check if it's a full URL or just a domain
     try {
-      const url = new URL(newPageUrl);
-      websiteMutation.mutate({
-        domain: url.hostname,
-        name: url.hostname,
-        isActive: true,
-        allowedPages: [url.pathname],
-        whitelistMode: true,
-      });
-    } catch (error) {
+      // Try parsing as URL first
+      const url = new URL(domain.startsWith('http') ? domain : `https://${domain}`);
+      domain = url.hostname;
+    } catch {
+      // If parsing fails, assume it's just a domain name
+      // Remove any protocol prefix if present
+      domain = domain.replace(/^https?:\/\//, '').split('/')[0];
+    }
+    
+    if (!domain) {
       toast({
-        title: "Invalid URL",
-        description: "Please enter a valid URL.",
+        title: "Invalid domain",
+        description: "Please enter a valid domain (e.g., example.com or https://example.com)",
         variant: "destructive",
       });
+      return;
     }
+    
+    websiteMutation.mutate({
+      domain: domain,
+      name: domain,
+      isActive: true,
+      allowedPages: [],
+      whitelistMode: false, // Allow all pages by default
+    });
   };
 
   const toggleWebsiteStatus = (website: any) => {
@@ -140,6 +174,12 @@ export default function WidgetSettingsPage() {
       id: website.id,
       data: { isActive: !website.isActive },
     });
+  };
+
+  const handleDeleteWebsite = (website: any) => {
+    if (confirm(`Are you sure you want to delete ${website.domain}? This action cannot be undone.`)) {
+      deleteWebsiteMutation.mutate(website.id);
+    }
   };
 
   const embedCode = `<script src="https://tigoniq.com/chatbot.js" data-cfasync="false"></script>`;
@@ -308,7 +348,7 @@ export default function WidgetSettingsPage() {
                     <Input
                       value={newPageUrl}
                       onChange={(e) => setNewPageUrl(e.target.value)}
-                      placeholder="https://example.com/page"
+                      placeholder="example.com or https://example.com"
                       className="flex-1"
                       data-testid="input-new-website"
                     />
@@ -321,6 +361,9 @@ export default function WidgetSettingsPage() {
                       Add Website
                     </Button>
                   </div>
+                  <p className="text-sm text-muted-foreground">
+                    Enter a domain name to allow chatbot on all pages of that website
+                  </p>
 
                   <div className="space-y-2" data-testid="websites-list">
                     {websites?.map((website: any) => (
@@ -349,6 +392,14 @@ export default function WidgetSettingsPage() {
                             data-testid={`button-toggle-website-${website.id}`}
                           >
                             {website.isActive ? "Disable" : "Enable"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteWebsite(website)}
+                            data-testid={`button-delete-website-${website.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>

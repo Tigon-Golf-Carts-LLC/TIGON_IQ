@@ -29,6 +29,7 @@ export interface IStorage {
   getWebsiteByDomain(domain: string): Promise<Website | undefined>;
   createWebsite(website: InsertWebsite): Promise<Website>;
   updateWebsite(id: string, updates: Partial<Website>): Promise<Website | undefined>;
+  deleteWebsite(id: string): Promise<boolean>;
   getAllWebsites(): Promise<Website[]>;
 
   // Conversation methods
@@ -147,6 +148,13 @@ export class DatabaseStorage implements IStorage {
       .where(eq(websites.id, id))
       .returning();
     return website || undefined;
+  }
+
+  async deleteWebsite(id: string): Promise<boolean> {
+    const result = await db
+      .delete(websites)
+      .where(eq(websites.id, id));
+    return (result as any).rowCount > 0;
   }
 
   async getAllWebsites(): Promise<Website[]> {
