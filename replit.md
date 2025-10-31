@@ -29,13 +29,14 @@ Preferred communication style: Simple, everyday language.
 - **Domain Badge**: Prominent badge in conversation header showing website domain with Globe icon for easy identification of conversation source
 
 ## Admin Features
-- **Delete All Messages**: Admin-only feature to bulk delete all messages from all conversations
+- **Delete All Conversations**: Admin-only feature to bulk delete all conversations and messages
   - Location: Full-width red button in Conversations page header
   - Access: Only visible and accessible to users with role === 'admin'
-  - Behavior: Deletes all messages while preserving conversations
+  - Behavior: Deletes ALL conversations AND all their messages permanently
   - Safety: Confirmation dialog with destructive warning before deletion
-  - Feedback: Success toast shows count of deleted messages
+  - Feedback: Success toast shows accurate counts for both deleted conversations and messages (e.g., "Successfully deleted 2 conversations and 5 messages")
   - API: DELETE /api/conversations/messages/all (admin-only endpoint)
+  - Returns: `{ deletedConversations: number, deletedMessages: number }`
   - Test ID: `button-delete-all-messages`
 
 ## Backend Architecture
