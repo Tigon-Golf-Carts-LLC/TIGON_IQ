@@ -13,6 +13,7 @@ export interface AIResponseOptions {
   systemPrompt?: string;
   maxTokens?: number;
   temperature?: number;
+  model?: string;
 }
 
 export async function generateAIResponse(
@@ -67,7 +68,8 @@ The tone remains professional, friendly, and informative. When needed, TIGON IQ 
 
 Clarification questions are encouraged when needed. Speculation is discouraged; transparency and accuracy are priorities.`,
       maxTokens = 2000,
-      temperature = 0.7
+      temperature = 0.7,
+      model = "gpt-4o-mini"
     } = options;
 
     const chatMessages: ChatMessage[] = [
@@ -76,7 +78,7 @@ Clarification questions are encouraged when needed. Speculation is discouraged; 
     ];
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: model,
       messages: chatMessages,
       max_tokens: maxTokens,
       temperature: temperature,

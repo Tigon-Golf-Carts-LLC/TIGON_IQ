@@ -327,6 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         systemPrompt: settings.aiConfig?.systemPrompt || 'You are a helpful customer service assistant.',
         maxTokens: settings.aiConfig?.maxTokens || 2000,
         temperature: settings.aiConfig?.temperature || 0.7,
+        model: settings.aiConfig?.model || 'gpt-4o-mini',
       });
 
       // Save AI response

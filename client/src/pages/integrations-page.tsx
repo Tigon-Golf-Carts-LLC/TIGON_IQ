@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -730,14 +731,23 @@ export default function IntegrationsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="aiModel">AI Model</Label>
-                      <Input
-                        id="aiModel"
-                        value={aiConfig.model || "gpt-5"}
-                        disabled
-                        data-testid="input-ai-model"
-                      />
+                      <Select
+                        value={aiConfig.model || "gpt-4o-mini"}
+                        onValueChange={(value) => updateAiConfig({ model: value })}
+                      >
+                        <SelectTrigger id="aiModel" data-testid="select-ai-model">
+                          <SelectValue placeholder="Select AI model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="gpt-4o">GPT-4o (Latest, Most Capable)</SelectItem>
+                          <SelectItem value="gpt-4o-mini">GPT-4o Mini (Fast & Cost-Effective)</SelectItem>
+                          <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
+                          <SelectItem value="gpt-4">GPT-4</SelectItem>
+                          <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo (Fastest)</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <p className="text-xs text-muted-foreground">
-                        Using latest GPT-5 model
+                        Select the OpenAI model to use for AI responses
                       </p>
                     </div>
 
