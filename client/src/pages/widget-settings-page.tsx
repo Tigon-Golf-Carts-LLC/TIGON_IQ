@@ -367,40 +367,63 @@ export default function WidgetSettingsPage() {
 
                   <div className="space-y-2" data-testid="websites-list">
                     {websites?.map((website: any) => (
-                      <div key={website.id} className="flex items-center justify-between p-3 bg-muted rounded-md">
-                        <div className="flex items-center space-x-3">
-                          <Globe className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <span className="font-medium" data-testid={`website-domain-${website.id}`}>
-                              {website.domain}
-                            </span>
-                            <div className="text-xs text-muted-foreground">
-                              {!website.whitelistMode || (website.allowedPages?.length || 0) === 0 
-                                ? "All pages allowed" 
-                                : `${website.allowedPages?.length || 0} allowed pages`}
+                      <div key={website.id} className="p-3 bg-muted rounded-md space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Globe className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <span className="font-medium" data-testid={`website-domain-${website.id}`}>
+                                {website.domain}
+                              </span>
+                              <div className="text-xs text-muted-foreground">
+                                {!website.whitelistMode || (website.allowedPages?.length || 0) === 0 
+                                  ? "All pages allowed" 
+                                  : `${website.allowedPages?.length || 0} allowed pages`}
+                              </div>
                             </div>
                           </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={website.isActive ? "default" : "secondary"}>
+                              {website.isActive ? "Active" : "Inactive"}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => toggleWebsiteStatus(website)}
+                              data-testid={`button-toggle-website-${website.id}`}
+                            >
+                              {website.isActive ? "Disable" : "Enable"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteWebsite(website)}
+                              data-testid={`button-delete-website-${website.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant={website.isActive ? "default" : "secondary"}>
-                            {website.isActive ? "Active" : "Inactive"}
-                          </Badge>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => toggleWebsiteStatus(website)}
-                            data-testid={`button-toggle-website-${website.id}`}
-                          >
-                            {website.isActive ? "Disable" : "Enable"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDeleteWebsite(website)}
-                            data-testid={`button-delete-website-${website.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        
+                        <div className="flex items-center justify-between pl-7 pt-2 border-t border-border/50">
+                          <div>
+                            <Label className="text-sm font-medium">Allow All Pages</Label>
+                            <p className="text-xs text-muted-foreground">
+                              {!website.whitelistMode 
+                                ? "Chatbot is enabled on all pages" 
+                                : "Chatbot is restricted to specific pages"}
+                            </p>
+                          </div>
+                          <Switch
+                            checked={!website.whitelistMode}
+                            onCheckedChange={(checked) => 
+                              updateWebsiteMutation.mutate({
+                                id: website.id,
+                                data: { whitelistMode: !checked },
+                              })
+                            }
+                            data-testid={`switch-allow-all-pages-${website.id}`}
+                          />
                         </div>
                       </div>
                     )) || (
