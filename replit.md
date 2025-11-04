@@ -17,7 +17,7 @@ Preferred communication style: Simple, everyday language.
 - **UI/UX Decisions**: Sticky navigation and chat headers, custom scrollbars, representative assignment with online indicators, and prominent domain badges in conversation view.
 - **Admin Features**:
     - **Delete All Conversations**: Admin-only bulk deletion with confirmation and success feedback.
-    - **Website Management**: CRUD operations for registered websites, including domain validation, enabling/disabling, and integration with the embeddable chatbot widget configuration.
+    - **Website Management**: CRUD operations for registered websites, including domain validation, enabling/disabling, "Allow All Pages" toggle (whitelistMode control), CASCADE delete (removes conversations/messages), and integration with the embeddable chatbot widget configuration.
     - **Avatar Upload System**: Reusable component for uploading and managing chatbot widget icons and representative profile avatars, storing images as Base64 data URLs in the database.
 
 ## Backend
