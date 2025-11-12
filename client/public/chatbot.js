@@ -1,6 +1,13 @@
 (function() {
   'use strict';
 
+  // Prevent double initialization
+  if (window.TIGON_CHATBOT_INITIALIZED) {
+    console.log('[TIGON Chatbot] Already initialized, skipping...');
+    return;
+  }
+  window.TIGON_CHATBOT_INITIALIZED = true;
+
   // Configuration
   const WIDGET_ID = 'chatbot-widget';
   const API_BASE = window.location.hostname === 'localhost' || window.location.hostname.includes('replit.dev') 
@@ -829,6 +836,12 @@
 
   // Initialize widget
   async function initWidget() {
+    // Check if already initialized
+    if (document.getElementById(WIDGET_ID)) {
+      console.log('[TIGON Chatbot] Widget already exists, skipping initialization');
+      return;
+    }
+
     // Create styles
     createStyles();
     
