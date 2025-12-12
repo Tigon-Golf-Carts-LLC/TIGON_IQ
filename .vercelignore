@@ -1,0 +1,49 @@
+# Development files
+node_modules
+.env
+.env.local
+.env.*.local
+
+# Build artifacts (except dist/public which is needed)
+dist/index.js
+
+# Development tools
+.replit
+replit.md
+
+# Version control
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Screenshots and images not needed for production
+screenshots/
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Attached assets (backup files)
+attached_assets/
+
+# Database migrations (handled by db:push)
+migrations/
+
+# Testing
+coverage/
+.nyc_output/
+
+# OS files
+.DS_Store
+Thumbs.db

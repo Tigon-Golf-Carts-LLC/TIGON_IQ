@@ -4,6 +4,7 @@ import { WebSocketServer } from "ws";
 import WebSocket from "ws";
 import { setupAuth, requireAuth, requireRole } from "./auth";
 import { storage } from "./storage";
+import { setupPolling } from "./polling";
 import { generateAIResponse, shouldHandoffToHuman, extractCustomerIntent } from "./services/openai";
 import { internalEmailService } from "./services/internal-email";
 import { z } from "zod";
@@ -40,6 +41,9 @@ interface WebSocketClient extends WebSocket {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
+
+  // Setup polling routes (for Vercel/serverless environments)
+  setupPolling(app);
 
   const httpServer = createServer(app);
 
